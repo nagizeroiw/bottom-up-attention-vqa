@@ -64,7 +64,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             model_path = os.path.join(output, 'model.pth')
             torch.save(model.state_dict(), model_path)
             best_eval_score = eval_score
-        logger.write('\tbest score: %.2f' % (best_eval_score))
+        logger.write('\tbest score: %.2f' % (100 * best_eval_score))
 
 
 def evaluate(model, dataloader):

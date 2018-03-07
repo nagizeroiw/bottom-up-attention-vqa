@@ -16,7 +16,7 @@ class Attention(nn.Module):
         q: [batch, qdim]
         """
         logits = self.logits(v, q)
-        w = nn.functional.softmax(logits)
+        w = nn.functional.softmax(logits, dim=1)
         return w
 
     def logits(self, v, q):
@@ -43,7 +43,7 @@ class NewAttention(nn.Module):
         q: [batch, qdim]
         """
         logits = self.logits(v, q)
-        w = nn.functional.softmax(logits)
+        w = nn.functional.softmax(logits, dim=1)
         return w
 
     def logits(self, v, q):
