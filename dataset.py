@@ -119,8 +119,8 @@ class VQAFeatureDataset(Dataset):
         with h5py.File(h5_path, 'r') as hf:
             # self.features = np.array(hf.get('image_features'))
             # self.spatials = np.array(hf.get('spatial_features'))
-            self.features = hf.get('image_features').values()[0][:]
-            self.spatials = hf.get('spatial_features').values()[0][:]
+            self.features = hf.get('image_features')[:]
+            self.spatials = hf.get('spatial_features')[:]
         print('> features.shape', self.features.shape)
         # train (82783, 36, 2048), val ()
         print('> spatials.shape', self.spatials.shape)
