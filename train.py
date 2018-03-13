@@ -77,6 +77,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             bar.update(i)
 
         bar.finish()
+        train_t = time.time() - t
 
         total_loss /= len(train_loader.dataset)
         train_score = 100 * train_score / len(train_loader.dataset)
@@ -84,7 +85,9 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         eval_score, bound = evaluate(model, eval_loader)
         model.train(True)
 
-        logger.write('epoch %d, time: %.2f' % (epoch, time.time() - t))
+        total_time = time.time() - t
+
+        logger.write('epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
         logger.write('\teval score: %.2f (%.2f)' % (100 * eval_score, 100 * bound))
 
