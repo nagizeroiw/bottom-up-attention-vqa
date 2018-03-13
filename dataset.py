@@ -194,7 +194,7 @@ class VQAFeatureDataset(Dataset):
             features (36, 2048) -> image features (represented by 36 top objects / salient regions)
             spatials (36, 6) -> spatial features (() of 36 top objects)
             question (14,) -> question sentence sequence (tokenized)
-            target (N_ans,) -> answer target (with soft labels)
+            target (3129,) -> answer target (with soft labels)
         '''
 
     def __len__(self):

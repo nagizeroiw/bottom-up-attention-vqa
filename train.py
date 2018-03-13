@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import utils
 from torch.autograd import Variable
+from progressbar import ProgressBar
 
 try:
     import tensorflow as tf
@@ -48,12 +49,15 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         train_score = 0
         t = time.time()
 
+        bar = ProgressBar(maxval=len(train_loader))
+        bar.start()
+
         for i, (v, b, q, a) in enumerate(train_loader):
             '''
                 v:features (b, 36, 2048) -> image features (represented by 36 top objects / salient regions)
                 b:spatials (b, 36, 6) -> spatial features (() of 36 top objects)
                 q:question (b, 14) -> question sentence sequence (tokenized)
-                a:target (b, N_ans) -> answer target (with soft labels)
+                a:target (b, 3129) -> answer target (with soft labels)
             '''
             v = Variable(v).cuda()
             b = Variable(b).cuda()
@@ -70,6 +74,9 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             batch_score = compute_score_with_logits(pred, a.data).sum()
             total_loss += loss.data[0] * v.size(0)
             train_score += batch_score
+            bar.update(i)
+
+        bar.finish()
 
         total_loss /= len(train_loader.dataset)
         train_score = 100 * train_score / len(train_loader.dataset)
