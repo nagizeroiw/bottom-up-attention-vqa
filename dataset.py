@@ -117,8 +117,10 @@ class VQAFeatureDataset(Dataset):
         print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
-            self.features = np.array(hf.get('image_features'))
-            self.spatials = np.array(hf.get('spatial_features'))
+            # self.features = np.array(hf.get('image_features'))
+            # self.spatials = np.array(hf.get('spatial_features'))
+            self.features = hf.get('image_features').values()[0][:]
+            self.spatials = hf.get('spatial_features').values()[0][:]
         print('> features.shape', self.features.shape)
         # train (82783, 36, 2048), val ()
         print('> spatials.shape', self.spatials.shape)
@@ -130,6 +132,7 @@ class VQAFeatureDataset(Dataset):
         self.tensorize()
         self.v_dim = self.features.size(2)  # 2048
         self.s_dim = self.spatials.size(2)  # 6
+        print('> features and labels loaded.')
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
