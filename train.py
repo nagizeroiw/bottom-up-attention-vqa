@@ -87,7 +87,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
 
         total_time = time.time() - t
 
-        logger.write('epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
+        logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
         logger.write('\teval score: %.2f (%.2f)' % (100 * eval_score, 100 * bound))
 
