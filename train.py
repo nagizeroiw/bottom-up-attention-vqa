@@ -5,6 +5,17 @@ import torch.nn as nn
 import utils
 from torch.autograd import Variable
 
+try:
+    import tensorflow as tf
+except ImportError:
+    print "! Tensorflow not installed; Not tensorboard logging."
+    tf = None
+
+
+def add_summary_value(writer, key, value, iteration):
+    summary = tf.Summary(value=[tf.Summary.Value(tag=key, simple_value=value)])
+    writer.add_summary(summary)
+
 
 def instance_bce_with_logits(logits, labels):
     assert logits.dim() == 2
@@ -28,12 +39,22 @@ def train(model, train_loader, eval_loader, num_epochs, output):
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_score = 0
 
+    tf_writer = tf and tf.summary.FileWriter(os.path.join(output, 'tf_log/'))
+
+    logger.write('> start training')
+
     for epoch in range(num_epochs):
         total_loss = 0
         train_score = 0
         t = time.time()
 
         for i, (v, b, q, a) in enumerate(train_loader):
+            '''
+                v:features (b, 36, 2048) -> image features (represented by 36 top objects / salient regions)
+                b:spatials (b, 36, 6) -> spatial features (() of 36 top objects)
+                q:question (b, 14) -> question sentence sequence (tokenized)
+                a:target (b, N_ans) -> answer target (with soft labels)
+            '''
             v = Variable(v).cuda()
             b = Variable(b).cuda()
             q = Variable(q).cuda()
@@ -56,9 +77,14 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         eval_score, bound = evaluate(model, eval_loader)
         model.train(True)
 
-        logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
+        logger.write('epoch %d, time: %.2f' % (epoch, time.time() - t))
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
         logger.write('\teval score: %.2f (%.2f)' % (100 * eval_score, 100 * bound))
+
+        add_summary_value(tf_writer, 'loss', total_loss, epoch)
+        add_summary_value(tf_writer, 'train_score', train_score, epoch)
+        add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
+        tf_writer.flush()
 
         if eval_score > best_eval_score:
             model_path = os.path.join(output, 'model.pth')

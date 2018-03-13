@@ -108,18 +108,21 @@ class VQAFeatureDataset(Dataset):
         self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
         self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
         self.num_ans_candidates = len(self.ans2label)
+        print('> num_ans_candidates:', self.num_ans_candidates)
 
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
-        print('loading features from h5 file')
+        print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
         print('> features.shape', self.features.shape)
+        # train (82783, 36, 2048), val ()
         print('> spatials.shape', self.spatials.shape)
+        # train ()
 
         self.entries = _load_dataset(dataroot, name, self.img_id2idx)
 
@@ -184,6 +187,12 @@ class VQAFeatureDataset(Dataset):
             target.scatter_(0, labels, scores)
 
         return features, spatials, question, target
+        '''
+            features (36, 2048) -> image features (represented by 36 top objects / salient regions)
+            spatials (36, 6) -> spatial features (() of 36 top objects)
+            question (14,) -> question sentence sequence (tokenized)
+            target (N_ans,) -> answer target (with soft labels)
+        '''
 
     def __len__(self):
         return len(self.entries)
