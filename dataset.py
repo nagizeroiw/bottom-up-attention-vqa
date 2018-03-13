@@ -66,7 +66,7 @@ def _create_entry(img, question, answer):
     entry = {
         'question_id' : question['question_id'],
         'image_id'    : question['image_id'],
-        'image'       : img,
+        'image'       : img,  # idx for hdf5 file
         'question'    : question['question'],
         'answer'      : answer}
     return entry
@@ -125,8 +125,8 @@ class VQAFeatureDataset(Dataset):
 
         self.tokenize()
         self.tensorize()
-        self.v_dim = self.features.size(2)
-        self.s_dim = self.spatials.size(2)
+        self.v_dim = self.features.size(2)  # 2048
+        self.s_dim = self.spatials.size(2)  # 6
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.

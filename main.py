@@ -1,3 +1,4 @@
+import time
 import argparse
 import torch
 import torch.nn as nn
@@ -29,10 +30,14 @@ if __name__ == '__main__':
     torch.cuda.manual_seed(args.seed)
     torch.backends.cudnn.benchmark = True
 
+    start = time.time()
+
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
     train_dset = VQAFeatureDataset('train', dictionary)
     eval_dset = VQAFeatureDataset('val', dictionary)
     batch_size = args.batch_size
+
+    print '> data loaded. time: %.2fs' % (time.time() - start)
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_dset, args.num_hid).cuda()
