@@ -10,3 +10,4 @@ new_logs*
 *.txt
 models/
 saved_models/
+tf_log/
