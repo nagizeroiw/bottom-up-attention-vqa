@@ -91,9 +91,9 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
         logger.write('\teval score: %.2f (%.2f)' % (100 * eval_score, 100 * bound))
 
-        add_summary_value(tf_writer, 'loss', total_loss, epoch)
-        add_summary_value(tf_writer, 'train_score', train_score, epoch)
-        add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
+        add_summary_value(tf_writer, 'loss', total_loss, epoch * len(train_loader))
+        add_summary_value(tf_writer, 'train_score', train_score, epoch * len(train_loader))
+        add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch * len(train_loader))
         tf_writer.flush()
 
         if eval_score > best_eval_score:

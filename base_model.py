@@ -25,16 +25,16 @@ class BaseModel(nn.Module):
 
         return: logits, not probs
         """
-        w_emb = self.w_emb(q)
-        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        w_emb = self.w_emb(q)  # [batch, wemb_dim]
+        q_emb = self.q_emb(w_emb)  # [batch, q_dim]
 
-        att = self.v_att(v, q_emb)
-        v_emb = (att * v).sum(1) # [batch, v_dim]
+        att = self.v_att(v, q_emb)  # [batch, num_objs, obj_dim]
+        v_emb = (att * v).sum(1)  # [batch, obj_dim]
 
-        q_repr = self.q_net(q_emb)
-        v_repr = self.v_net(v_emb)
-        joint_repr = q_repr * v_repr
-        logits = self.classifier(joint_repr)
+        q_repr = self.q_net(q_emb)  # [batch, num_hid]
+        v_repr = self.v_net(v_emb)  # [batch, num_hid]
+        joint_repr = q_repr * v_repr  # [batch, num_hid]
+        logits = self.classifier(joint_repr)  # [batch, n_answers]
         return logits
 
 
