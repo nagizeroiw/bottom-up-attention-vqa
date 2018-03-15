@@ -15,7 +15,7 @@ except ImportError:
 
 def add_summary_value(writer, key, value, iteration):
     summary = tf.Summary(value=[tf.Summary.Value(tag=key, simple_value=value)])
-    writer.add_summary(summary)
+    writer.add_summary(summary, iteration)
 
 
 def instance_bce_with_logits(logits, labels):
@@ -34,9 +34,15 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
-def train(model, train_loader, eval_loader, num_epochs, output):
+def train(model, train_loader, eval_loader, args):
+
+    num_epochs = args.num_epochs
+    output = args.output
+    lr = args.lr
+    weight_decay = args.weight_decay
+
     utils.create_dir(output)
-    optim = torch.optim.Adamax(model.parameters())
+    optim = torch.optim.Adamax(model.parameters(), lr=lr, weight_decay=weight_decay)
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_score = 0
 
@@ -91,9 +97,9 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
         logger.write('\teval score: %.2f (%.2f)' % (100 * eval_score, 100 * bound))
 
-        add_summary_value(tf_writer, 'loss', total_loss, epoch * len(train_loader))
-        add_summary_value(tf_writer, 'train_score', train_score, epoch * len(train_loader))
-        add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch * len(train_loader))
+        add_summary_value(tf_writer, 'loss', total_loss, epoch)
+        add_summary_value(tf_writer, 'train_score', train_score, epoch)
+        add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
         tf_writer.flush()
 
         if eval_score > best_eval_score:
