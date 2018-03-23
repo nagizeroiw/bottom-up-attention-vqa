@@ -36,13 +36,12 @@ def compute_score_with_logits(logits, labels):
 
 def train(model, train_loader, eval_loader, args):
 
-    num_epochs = args.num_epochs
+    num_epochs = args.epochs
     output = args.output
     lr = args.lr
-    weight_decay = args.weight_decay
 
     utils.create_dir(output)
-    optim = torch.optim.Adamax(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optim = torch.optim.Adam(model.parameters(), lr=lr)
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_score = 0
 
