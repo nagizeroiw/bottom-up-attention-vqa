@@ -92,8 +92,8 @@ def train(model, train_loader, eval_loader, args):
         bar.finish()
         train_t = time.time() - t
 
-        total_loss /= len(train_loader.dataset) / 2.
-        train_score = 100 * train_score / len(train_loader.dataset) / 2.
+        total_loss /= train_loader.dataset.loss_len()
+        train_score = 100 * train_score / train_loader.dataset.loss_len()
         model.train(False)
         eval_score = evaluate(model, eval_loader)
         model.train(True)
@@ -128,5 +128,5 @@ def evaluate(model, dataloader):
         score += batch_score
         num_data += pred.size(0)
 
-    score = score / len(dataloader.dataset) / 2.
+    score = score / dataloader.dataset.loss_len()
     return score

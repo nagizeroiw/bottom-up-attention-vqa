@@ -210,6 +210,9 @@ class VQAFeatureDataset(Dataset):
     def __len__(self):
         return len(self.entries)
 
+    def loss_len(self):
+        return len(self.entries)
+
 class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
     def __init__(self, name, dictionary, dataroot='data'):
@@ -246,3 +249,6 @@ class VQAFeatureDatasetWithPair(VQAFeatureDataset):
     def __len__(self):
         # return len(self.entries)
         return len(self.pairs)
+
+    def loss_len(self):
+        return 2. * len(self.pairs)
