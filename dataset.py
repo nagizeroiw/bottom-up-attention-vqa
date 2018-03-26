@@ -132,7 +132,7 @@ class VQAFeatureDataset(Dataset):
         print('> features.shape', self.features.shape)
         # train (82783, 36, 2048), val ()
         print('> spatials.shape', self.spatials.shape)
-        # train ()
+        # train (82783, 36, 6), val ()
 
         self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx)
 
@@ -228,10 +228,10 @@ class VQAFeatureDataset(Dataset):
         p_target = torch.stack([target1, target2], dim=0)
 
         if not self.seen_pshape:
-            print('p_features', p_features.size)
-            print('p_spatials', p_spatials.size)
-            print('p_question', p_question.size)
-            print('p_target', p_target.size)
+            print('p_features', p_features.size())
+            print('p_spatials', p_spatials.size())
+            print('p_question', p_question.size())
+            print('p_target', p_target.size())
             self.seen_pshape = True
 
         return p_features, p_spatials, p_question, p_target
