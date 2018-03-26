@@ -24,14 +24,14 @@ class BaseModel(nn.Module):
         # b: [batch, num_objs, b_dim]
         # q: [batch_size, seq_length]
     (now)
-        v: [2, batch, num_objs, obj_dim]
-        b: [2, batch, num_objs, b_dim]
-        q: [2, batch, seq_length]
+        v: [batch, 2, num_objs, obj_dim]
+        b: [batch, 2, num_objs, b_dim]
+        q: [batch, 2, seq_length]
 
         return: logits, not probs
         """
 
-        _, batch, num_objs, obj_dim = v.size()
+        batch, _, num_objs, obj_dim = v.size()
         _, __, ___, b_dim = b.size()
         _, __, seq_length = q.size()
 
@@ -47,16 +47,16 @@ class BaseModel(nn.Module):
             self.seen_back2normal_shape = True
         '''
 
-        w_emb = self.w_emb(q)  # [batch, wemb_dim]
-        q_emb = self.q_emb(w_emb)  # [batch, q_dim]
+        w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
+        q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
 
-        att = self.v_att(v, q_emb)  # [batch, num_objs, obj_dim]
-        v_emb = (att * v).sum(1)  # [batch, obj_dim]
+        att = self.v_att(v, q_emb)  # attention weight [batch, num_objs, obj_dim]
+        v_emb = (att * v).sum(1)  # attended feature vector [batch, obj_dim]
 
-        q_repr = self.q_net(q_emb)  # [batch, num_hid]
-        v_repr = self.v_net(v_emb)  # [batch, num_hid]
-        joint_repr = q_repr * v_repr  # [batch, num_hid]
-        logits = self.classifier(joint_repr)  # [batch, n_answers]
+        q_repr = self.q_net(q_emb)  # question representation [batch, num_hid]
+        v_repr = self.v_net(v_emb)  # image representation [batch, num_hid]
+        joint_repr = q_repr * v_repr  # joint embedding (joint representation) [batch, num_hid]
+        logits = self.classifier(joint_repr)  # answer (answer probabilities) [batch, n_answers]
         return logits
 
 
