@@ -138,6 +138,15 @@ class VQAFeatureDataset(Dataset):
 
         self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx)
 
+        # "baseline": only use questions that are covered by the complementary pair list.
+        self.n_entries = []
+        for qid1, qid2 in self.pairs:
+            self.n_entries.append(self.entries[self.qid2eid[qid1]])
+            self.n_entries.append(self.entries[self.qid2eid[qid2]])
+        self.entries = self.n_entries
+        print('> It seems that cpair list covers %d questions.' % len(self.entries))
+        # "baseline"
+
         self.tokenize()
         self.tensorize()
         self.v_dim = self.features.size(2)  # 2048

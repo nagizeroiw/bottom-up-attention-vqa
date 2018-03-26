@@ -1,3 +1,3 @@
 CUDA_VISIBLE_DEVICES=0 python main.py \
-    --output 'saved_models/norm_bs/' \
+    --output 'saved_models/nbaseline/' \
     --epochs 40
