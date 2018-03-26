@@ -6,6 +6,7 @@ import numpy as np
 import utils
 import h5py
 import torch
+import random
 from torch.utils.data import Dataset
 
 
@@ -141,9 +142,10 @@ class VQAFeatureDataset(Dataset):
         # "baseline": only use questions that are covered by the complementary pair list.
         self.n_entries = []
         for qid1, qid2 in self.pairs:
-            self.n_entries.append(self.entries[self.qid2eid[qid1]])
-            self.n_entries.append(self.entries[self.qid2eid[qid2]])
+            self.n_entries.append(self.entries[self.qid2eid[qid1]].clone())
+            self.n_entries.append(self.entries[self.qid2eid[qid2]].clone())
         self.entries = self.n_entries
+        random.shuffle(self.entries)
         print('> It seems that cpair list covers %d questions.' % len(self.entries))
         # "baseline"
 
