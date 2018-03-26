@@ -1,4 +1,3 @@
 CUDA_VISIBLE_DEVICES=0 python main.py \
     --output 'saved_models/norm_bs/' \
-    --epochs 40 \
-    --batch_size 256
+    --epochs 40
