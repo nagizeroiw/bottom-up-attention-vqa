@@ -35,15 +35,17 @@ class BaseModel(nn.Module):
         _, __, ___, b_dim = b.size()
         _, __, seq_length = q.size()
 
-        v = v.view(-1, num_objs, obj_dim)
-        b = b.view(-1, num_objs, b_dim)
-        q = q.view(-1, seq_length)
+        v = v.view(-1, num_objs, obj_dim)  # (2 * batch, num_objs, obj_dim)
+        b = b.view(-1, num_objs, b_dim)  # (2 * batch, num_objs, b_dim)
+        q = q.view(-1, seq_length)  # (2 * batch, seq_length)
 
+        '''
         if not self.seen_back2normal_shape:
             print('v', v.size())
             print('b', b.size())
             print('q', q.size())
             self.seen_back2normal_shape = True
+        '''
 
         w_emb = self.w_emb(q)  # [batch, wemb_dim]
         q_emb = self.q_emb(w_emb)  # [batch, q_dim]

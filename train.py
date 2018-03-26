@@ -94,14 +94,14 @@ def train(model, train_loader, eval_loader, args):
         total_loss /= len(train_loader.dataset) / 2.
         train_score = 100 * train_score / len(train_loader.dataset) / 2.
         model.train(False)
-        eval_score, bound = evaluate(model, eval_loader)
+        eval_score = evaluate(model, eval_loader)
         model.train(True)
 
         total_time = time.time() - t
 
         logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
-        logger.write('\teval score: %.2f (%.2f)' % (100 * eval_score, 100 * bound))
+        logger.write('\teval score: %.2f' % (100 * eval_score))
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
         add_summary_value(tf_writer, 'train_score', train_score, epoch)
@@ -117,7 +117,6 @@ def train(model, train_loader, eval_loader, args):
 
 def evaluate(model, dataloader):
     score = 0
-    upper_bound = 0
     num_data = 0
     for v, b, q, a in iter(dataloader):
         v = Variable(v, volatile=True).cuda()
@@ -126,9 +125,7 @@ def evaluate(model, dataloader):
         pred = model(v, b, q, None)
         batch_score = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
-        upper_bound += (a.max(2)[0]).sum()
         num_data += pred.size(0)
 
     score = score / len(dataloader.dataset) / 2.
-    upper_bound = upper_bound / len(dataloader.dataset) / 2.
-    return score, upper_bound
+    return score

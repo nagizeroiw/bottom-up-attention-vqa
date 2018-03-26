@@ -227,14 +227,20 @@ class VQAFeatureDataset(Dataset):
         p_question = torch.stack([question1, question2], dim=0)
         p_target = torch.stack([target1, target2], dim=0)
 
+        '''
         if not self.seen_pshape:
             print('p_features', p_features.size())
             print('p_spatials', p_spatials.size())
             print('p_question', p_question.size())
             print('p_target', p_target.size())
             self.seen_pshape = True
-
+        '''
+        # p_features (2, 36, 2048)
+        # p_spatials (2, 36, 6)
+        # p_question (2, 14)
+        # p_target (2, 3129)
         return p_features, p_spatials, p_question, p_target
+       
 
     def __len__(self):
         # return len(self.entries)
