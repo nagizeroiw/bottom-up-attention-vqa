@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
 
-from dataset import Dictionary, VQAFeatureDataset
+from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair
 import base_model
 from train import train
 import utils
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     start = time.time()
 
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-    train_dset = VQAFeatureDataset('train', dictionary)
+    train_dset = VQAFeatureDatasetWithPair('train', dictionary)
     eval_dset = VQAFeatureDataset('val', dictionary)
     batch_size = args.batch_size
 

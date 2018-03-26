@@ -121,6 +121,8 @@ class VQAFeatureDataset(Dataset):
 
         print('> loading complementary pairs file')
         self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+        # train 200394 pairs, valid 95144 pairs
+        # train 443757 questions, valid 214354 questions
 
         print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
@@ -187,7 +189,6 @@ class VQAFeatureDataset(Dataset):
                 entry['answer']['scores'] = None
 
     def __getitem__(self, index):
-        '''
         entry = self.entries[index]
         features = self.features[entry['image']]
         spatials = self.spatials[entry['image']]
@@ -205,8 +206,16 @@ class VQAFeatureDataset(Dataset):
         # spatials (36, 6) -> spatial features (() of 36 top objects)
         # question (14,) -> question sentence sequence (tokenized)
         # target (3129,) -> answer target (with soft labels)
-        '''
 
+    def __len__(self):
+        return len(self.entries)
+
+class VQAFeatureDatasetWithPair(VQAFeatureDataset):
+
+    def __init__(self, name, dictionary, dataroot='data'):
+            super(VQAFeatureDataset, self).__init__()
+
+    def __getitem__(self, index):
         qid1, qid2 = self.pairs[index]
         ent1, ent2 = self.entries[self.qid2eid[qid1]], self.entries[self.qid2eid[qid2]]
         features1, features2 = self.features[ent1['image']], self.features[ent2['image']]
@@ -227,14 +236,6 @@ class VQAFeatureDataset(Dataset):
         p_question = torch.stack([question1, question2], dim=0)
         p_target = torch.stack([target1, target2], dim=0)
 
-        '''
-        if not self.seen_pshape:
-            print('p_features', p_features.size())
-            print('p_spatials', p_spatials.size())
-            print('p_question', p_question.size())
-            print('p_target', p_target.size())
-            self.seen_pshape = True
-        '''
         # p_features (2, 36, 2048)
         # p_spatials (2, 36, 6)
         # p_question (2, 14)

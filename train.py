@@ -20,9 +20,9 @@ def add_summary_value(writer, key, value, iteration):
 
 def instance_bce_with_logits(logits, labels):
     assert logits.dim() == 2
-
-    _, batch_size, n_answers = labels.size()
-    labels = labels.view(-1, n_answers)
+    if labels.dim() == 3:  # handle data with pair
+        _, batch_size, n_answers = labels.size()
+        labels = labels.view(-1, n_answers)
 
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
     loss *= labels.size(1)
@@ -31,8 +31,9 @@ def instance_bce_with_logits(logits, labels):
 
 def compute_score_with_logits(logits, labels):
 
-    _, batch_size, n_answers = labels.size()
-    labels = labels.view(-1, n_answers)
+    if labels.dim() == 3:  # handle data with pair
+        _, batch_size, n_answers = labels.size()
+        labels = labels.view(-1, n_answers)
 
     logits = torch.max(logits, 1)[1].data # argmax
     one_hots = torch.zeros(*labels.size()).cuda()
