@@ -21,6 +21,9 @@ def add_summary_value(writer, key, value, iteration):
 def instance_bce_with_logits(logits, labels):
     assert logits.dim() == 2
 
+    _, batch_size, n_answers = labels.size()
+    labels = labels.view(-1, n_answers)
+
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
     loss *= labels.size(1)
     return loss

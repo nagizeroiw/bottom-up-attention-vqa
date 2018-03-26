@@ -15,16 +15,36 @@ class BaseModel(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
+        self.seen_back2normal_shape = False
 
     def forward(self, v, b, q, labels):
         """Forward
-
-        v: [batch, num_objs, obj_dim]
-        b: [batch, num_objs, b_dim]
-        q: [batch_size, seq_length]
+    (past)
+        # v: [batch, num_objs, obj_dim]
+        # b: [batch, num_objs, b_dim]
+        # q: [batch_size, seq_length]
+    (now)
+        v: [2, batch, num_objs, obj_dim]
+        b: [2, batch, num_objs, b_dim]
+        q: [2, batch, seq_length]
 
         return: logits, not probs
         """
+
+        _, batch, num_objs, obj_dim = v.size()
+        _, __, ___, b_dim = b.size()
+        _, __, seq_length = q.size()
+
+        v = v.view(-1, num_objs, obj_dim)
+        b = b.view(-1, num_objs, b_dim)
+        q = q.view(-1, seq_length)
+
+        if not self.seen_back2normal_shape:
+            print('v', v.size())
+            print('b', b.size())
+            print('q', q.size())
+            self.seen_back2normal_shape = True
+
         w_emb = self.w_emb(q)  # [batch, wemb_dim]
         q_emb = self.q_emb(w_emb)  # [batch, q_dim]
 

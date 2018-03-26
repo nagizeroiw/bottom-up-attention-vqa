@@ -89,13 +89,17 @@ def _load_dataset(dataroot, name, img_id2val):
 
     utils.assert_eq(len(questions), len(answers))
     entries = []
+
+    qid2eid = {}
+
     for question, answer in zip(questions, answers):
         utils.assert_eq(question['question_id'], answer['question_id'])
         utils.assert_eq(question['image_id'], answer['image_id'])
         img_id = question['image_id']
         entries.append(_create_entry(img_id2val[img_id], question, answer))
+        qid2eid[question['question_id']] = len(entries) - 1
 
-    return entries
+    return entries, qid2eid
 
 
 class VQAFeatureDataset(Dataset):
@@ -114,6 +118,10 @@ class VQAFeatureDataset(Dataset):
 
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
+
+        print('> loading complementary pairs file')
+        self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+
         print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
@@ -126,13 +134,15 @@ class VQAFeatureDataset(Dataset):
         print('> spatials.shape', self.spatials.shape)
         # train ()
 
-        self.entries = _load_dataset(dataroot, name, self.img_id2idx)
+        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx)
 
         self.tokenize()
         self.tensorize()
         self.v_dim = self.features.size(2)  # 2048
         self.s_dim = self.spatials.size(2)  # 6
         print('> features and labels loaded.')
+
+        self.seen_pshape = False
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
@@ -177,6 +187,7 @@ class VQAFeatureDataset(Dataset):
                 entry['answer']['scores'] = None
 
     def __getitem__(self, index):
+        '''
         entry = self.entries[index]
         features = self.features[entry['image']]
         spatials = self.spatials[entry['image']]
@@ -190,12 +201,41 @@ class VQAFeatureDataset(Dataset):
             target.scatter_(0, labels, scores)
 
         return features, spatials, question, target
-        '''
-            features (36, 2048) -> image features (represented by 36 top objects / salient regions)
-            spatials (36, 6) -> spatial features (() of 36 top objects)
-            question (14,) -> question sentence sequence (tokenized)
-            target (3129,) -> answer target (with soft labels)
+        # features (36, 2048) -> image features (represented by 36 top objects / salient regions)
+        # spatials (36, 6) -> spatial features (() of 36 top objects)
+        # question (14,) -> question sentence sequence (tokenized)
+        # target (3129,) -> answer target (with soft labels)
         '''
 
+        qid1, qid2 = self.pairs[index]
+        ent1, ent2 = self.entries[self.qid2eid[qid1]], self.entries[self.qid2eid[qid2]]
+        features1, features2 = self.features[ent1['image']], self.features[ent2['image']]
+        spatials1, spatials2 = self.spatials[ent1['image']], self.spatials[ent2['image']]
+
+        question1, question2 = ent1['q_token'], ent2['q_token']
+        answer1, answer2 = ent1['answer'], ent2['answer']
+        labels1, labels2 = answer1['labels'], answer2['labels']
+        scores1, scores2 = answer1['scores'], answer2['scores']
+        target1, target2 = torch.zeros(self.num_ans_candidates), torch.zeros(self.num_ans_candidates)
+        if labels1 is not None:
+            target1.scatter_(0, labels1, scores1)
+        if labels2 is not None:
+            target2.scatter_(0, labels2, scores2)
+
+        p_features = torch.stack([features1, features2], dim=0)
+        p_spatials = torch.stack([spatials1, spatials2], dim=0)
+        p_question = torch.stack([question1, question2], dim=0)
+        p_target = torch.stack([target1, target2], dim=0)
+
+        if not self.seen_pshape:
+            print('p_features', p_features.size)
+            print('p_spatials', p_spatials.size)
+            print('p_question', p_question.size)
+            print('p_target', p_target.size)
+            self.seen_pshape = True
+
+        return p_features, p_spatials, p_question, p_target
+
     def __len__(self):
-        return len(self.entries)
+        # return len(self.entries)
+        return len(self.pairs)
