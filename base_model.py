@@ -35,6 +35,9 @@ class BaseModel(nn.Module):
             v = v.view(-1, num_objs, obj_dim)  # (2 * batch, num_objs, obj_dim)
             b = b.view(-1, num_objs, b_dim)  # (2 * batch, num_objs, b_dim)
             q = q.view(-1, seq_length)  # (2 * batch, seq_length)
+            pair_loss = True
+        else:
+            pair_loss = False
 
         '''
         if not self.seen_back2normal_shape:
@@ -44,16 +47,23 @@ class BaseModel(nn.Module):
             self.seen_back2normal_shape = True
         '''
 
-        w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
-        q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
+        w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
+        q_emb = self.q_emb(w_emb)  # question representation [2 * batch, q_dim]
 
-        att = self.v_att(v, q_emb)  # attention weight [batch, num_objs, obj_dim]
-        v_emb = (att * v).sum(1)  # attended feature vector [batch, obj_dim]
+        att = self.v_att(v, q_emb)  # attention weight [2 * batch, num_objs, obj_dim]
+        v_emb = (att * v).sum(1)  # attended feature vector [2 * batch, obj_dim]
 
-        q_repr = self.q_net(q_emb)  # question representation [batch, num_hid]
-        v_repr = self.v_net(v_emb)  # image representation [batch, num_hid]
-        joint_repr = q_repr * v_repr  # joint embedding (joint representation) [batch, num_hid]
-        logits = self.classifier(joint_repr)  # answer (answer probabilities) [batch, n_answers]
+        q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
+        v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
+        joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
+
+        '''
+        if pair_loss:
+            joint_repr = joint_repr.view(batch, 2, num_hid)  # [batch, 2, num_hid]
+            joint_repr = joint_repr.
+        '''
+
+        logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
         return logits
 
 def build_baseline0(dataset, num_hid):
