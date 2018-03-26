@@ -140,13 +140,13 @@ class VQAFeatureDataset(Dataset):
         self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx)
 
         # "baseline": only use questions that are covered by the complementary pair list.
-        self.n_entries = []
-        for qid1, qid2 in self.pairs:
-            self.n_entries.append(self.entries[self.qid2eid[qid1]])
-            self.n_entries.append(self.entries[self.qid2eid[qid2]])
-        self.entries, self.n_entries = self.n_entries, self.entries
-        random.shuffle(self.entries)
-        print('> It seems that cpair list covers %d questions.' % len(self.entries))
+        # self.n_entries = []
+        # for qid1, qid2 in self.pairs:
+        #     self.n_entries.append(self.entries[self.qid2eid[qid1]])
+        #     self.n_entries.append(self.entries[self.qid2eid[qid2]])
+        # self.entries, self.n_entries = self.n_entries, self.entries
+        # random.shuffle(self.entries)
+        # print('> It seems that cpair list covers %d questions.' % len(self.entries))
         # "baseline"
 
         self.tokenize()
@@ -190,18 +190,14 @@ class VQAFeatureDataset(Dataset):
             answer = entry['answer']
             labels = np.array(answer['labels'])
             scores = np.array(answer['scores'], dtype=np.float32)
-            try:
-                if len(labels):
-                    labels = torch.from_numpy(labels)
-                    scores = torch.from_numpy(scores)
-                    entry['answer']['labels'] = labels
-                    entry['answer']['scores'] = scores
-                else:
-                    entry['answer']['labels'] = None
-                    entry['answer']['scores'] = None
-            except TypeError:
-                print(labels)
-                print(answer)
+            if len(labels):
+                labels = torch.from_numpy(labels)
+                scores = torch.from_numpy(scores)
+                entry['answer']['labels'] = labels
+                entry['answer']['scores'] = scores
+            else:
+                entry['answer']['labels'] = None
+                entry['answer']['scores'] = None
 
     def __getitem__(self, index):
         entry = self.entries[index]
