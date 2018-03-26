@@ -34,7 +34,7 @@ if __name__ == '__main__':
     start = time.time()
 
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-    train_dset = VQAFeatureDatasetWithPair('train', dictionary)
+    train_dset = VQAFeatureDataset('train', dictionary)
     eval_dset = VQAFeatureDataset('val', dictionary)
     batch_size = args.batch_size
 
