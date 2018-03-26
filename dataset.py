@@ -73,7 +73,7 @@ def _create_entry(img, question, answer):
     return entry
 
 
-def _load_dataset(dataroot, name, img_id2val):
+def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
     """Load entries
 
     img_id2val: dict {img_id -> val} val can be used to retrieve image or features
@@ -96,6 +96,11 @@ def _load_dataset(dataroot, name, img_id2val):
     for question, answer in zip(questions, answers):
         utils.assert_eq(question['question_id'], answer['question_id'])
         utils.assert_eq(question['image_id'], answer['image_id'])
+
+        # only load questions that are included in complementary pairs list.
+        if cpair_qids is not None and question['question_id'] not in cpair_qids:
+            continue
+
         img_id = question['image_id']
         entries.append(_create_entry(img_id2val[img_id], question, answer))
         qid2eid[question['question_id']] = len(entries) - 1
@@ -125,6 +130,12 @@ class VQAFeatureDataset(Dataset):
         # train 200394 pairs, valid 95144 pairs
         # train 443757 questions, valid 214354 questions
 
+        cpair_qids = set()
+        for qid1, qid2 in self.pairs:
+            cpair_qids.add(qid1)
+            cpair_qids.add(qid2)
+        print('complementary pairs list covers %d questions.' % cpair_qids.size())
+
         print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
         with h5py.File(h5_path, 'r') as hf:
@@ -137,7 +148,7 @@ class VQAFeatureDataset(Dataset):
         print('> spatials.shape', self.spatials.shape)
         # train (82783, 36, 6), val (40504, 36, 6)
 
-        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx)
+        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
 
         # "baseline": only use questions that are covered by the complementary pair list.
         # self.n_entries = []
@@ -146,7 +157,7 @@ class VQAFeatureDataset(Dataset):
         #     self.n_entries.append(self.entries[self.qid2eid[qid2]])
         # self.entries, self.n_entries = self.n_entries, self.entries
         # random.shuffle(self.entries)
-        # print('> It seems that cpair list covers %d questions.' % len(self.entries))
+        print('> self.entries loaded %d questions.' % len(self.entries))
         # "baseline"
 
         self.tokenize()
