@@ -11,3 +11,4 @@ new_logs*
 models/
 saved_models/
 tf_log/
+vis/
