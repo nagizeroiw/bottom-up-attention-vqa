@@ -130,9 +130,9 @@ class VQAFeatureDataset(Dataset):
             self.features = hf.get('image_features')[:]
             self.spatials = hf.get('spatial_features')[:]
         print('> features.shape', self.features.shape)
-        # train (82783, 36, 2048), val ()
+        # train (82783, 36, 2048), val (40504, 36, 2048)
         print('> spatials.shape', self.spatials.shape)
-        # train (82783, 36, 6), val ()
+        # train (82783, 36, 6), val (40504, 36, 6)
 
         self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx)
 

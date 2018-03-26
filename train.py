@@ -91,8 +91,8 @@ def train(model, train_loader, eval_loader, args):
         bar.finish()
         train_t = time.time() - t
 
-        total_loss /= len(train_loader.dataset)
-        train_score = 100 * train_score / len(train_loader.dataset)
+        total_loss /= len(train_loader.dataset) / 2.
+        train_score = 100 * train_score / len(train_loader.dataset) / 2.
         model.train(False)
         eval_score, bound = evaluate(model, eval_loader)
         model.train(True)
@@ -126,9 +126,9 @@ def evaluate(model, dataloader):
         pred = model(v, b, q, None)
         batch_score = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
-        upper_bound += (a.max(1)[0]).sum()
+        upper_bound += (a.max(2)[0]).sum()
         num_data += pred.size(0)
 
-    score = score / len(dataloader.dataset)
-    upper_bound = upper_bound / len(dataloader.dataset)
+    score = score / len(dataloader.dataset) / 2.
+    upper_bound = upper_bound / len(dataloader.dataset) / 2.
     return score, upper_bound
