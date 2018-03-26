@@ -134,7 +134,7 @@ class VQAFeatureDataset(Dataset):
         for qid1, qid2 in self.pairs:
             cpair_qids.add(qid1)
             cpair_qids.add(qid2)
-        print('complementary pairs list covers %d questions.' % cpair_qids.size())
+        print('complementary pairs list covers %d questions.' % len(cpair_qids))
 
         print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
