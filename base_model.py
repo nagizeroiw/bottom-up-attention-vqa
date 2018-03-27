@@ -35,9 +35,9 @@ class BaseModel(nn.Module):
             v = v.view(-1, num_objs, obj_dim)  # (2 * batch, num_objs, obj_dim)
             b = b.view(-1, num_objs, b_dim)  # (2 * batch, num_objs, b_dim)
             q = q.view(-1, seq_length)  # (2 * batch, seq_length)
-            pair_loss = True
+            with_pair_loss = True
         else:
-            pair_loss = False
+            with_pair_loss = False
 
         '''
         if not self.seen_back2normal_shape:
@@ -57,13 +57,33 @@ class BaseModel(nn.Module):
         v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
         joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
 
-        '''
-        if pair_loss:
-            joint_repr = joint_repr.view(batch, 2, num_hid)  # [batch, 2, num_hid]
-            joint_repr = joint_repr.
-        '''
+        if with_pair_loss:
+            joint_repr = joint_repr.view(batch, 2, -1)  # [batch, 2, num_hid]
+            if not self.seen_back2normal_shape:
+                print('joint_repr', joint_repr.size())
+
+            joint_repr = joint_repr.transpose(1, 2)  # [batch, num_hid, 2]
+            if not self.seen_back2normal_shape:
+                print('joint_repr', joint_repr.size())
+
+            repr1, repr2 = joint_repr[:, :]
+            if not self.seen_back2normal_shape:
+                print('repr1|repr2', repr1.size())
+            # repr1, repr2 = joint_repr[:, :, 0], joint_repr[:, :, 1]
+
+            pair_loss = -0.01 * (repr1 - repr2).norm(dim=1)  # [batch,]
+            if not self.seen_back2normal_shape:
+                print('pair_loss', pair_loss.size())
+
+            pair_loss = pair_loss.repeat(2) # [2 * batch,]
+            if not self.seen_back2normal_shape:
+                print('final pair_loss', pair_loss.size())
+
+            self.seen_back2normal_shape = True
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
+        if with_pair_loss:
+            return logits, pair_loss
         return logits
 
 def build_baseline0(dataset, num_hid):

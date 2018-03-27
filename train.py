@@ -6,6 +6,8 @@ import utils
 from torch.autograd import Variable
 from progressbar import ProgressBar
 
+seen_loss_shape = False
+
 try:
     import tensorflow as tf
 except ImportError:
@@ -18,7 +20,7 @@ def add_summary_value(writer, key, value, iteration):
     writer.add_summary(summary, iteration)
 
 
-def instance_bce_with_logits(logits, labels):
+def instance_bce_with_logits(logits, labels, pair_loss=None):
     assert logits.dim() == 2
     if labels.dim() == 3:  # handle data with pair
         _, batch_size, n_answers = labels.size()
@@ -26,6 +28,15 @@ def instance_bce_with_logits(logits, labels):
 
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
     loss *= labels.size(1)
+
+    global seen_loss_shape
+    if not seen_loss_shape:
+        print('loss', loss.size())
+        seen_loss_shape = True
+
+    if pair_loss is not None:
+        loss += pair_loss  # works?
+
     return loss
 
 
@@ -77,8 +88,8 @@ def train(model, train_loader, eval_loader, args):
             q = Variable(q).cuda()
             a = Variable(a).cuda()
 
-            pred = model(v, b, q, a)
-            loss = instance_bce_with_logits(pred, a)
+            pred, pair_loss = model(v, b, q, a)
+            loss = instance_bce_with_logits(pred, a, pair_loss)
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), 0.25)
             optim.step()
