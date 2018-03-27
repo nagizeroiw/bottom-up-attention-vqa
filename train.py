@@ -35,6 +35,8 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
         print('loss', loss.size())
         seen_loss_shape = True
     '''
+
+    print(loss.data[0], pair_loss.data[0])
     
     if pair_loss is not None:
         loss += pair_loss  # works?
@@ -103,8 +105,8 @@ def train(model, train_loader, eval_loader, args):
                 total_loss += loss.data[0] * v.size(0)
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
-                total_pair_loss += pair_loss.data[0] * v.size(0) * 2
-                # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0) * 2)
+                total_pair_loss += pair_loss.data[0] * v.size(0)
+                # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))
             train_score += batch_score
             bar.update(i)
 
