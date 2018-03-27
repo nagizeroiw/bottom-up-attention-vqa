@@ -29,11 +29,13 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
     loss *= labels.size(1)
 
+    '''
     global seen_loss_shape
     if not seen_loss_shape:
         print('loss', loss.size())
         seen_loss_shape = True
-
+    '''
+    
     if pair_loss is not None:
         loss += pair_loss.sum()  # works?
 
