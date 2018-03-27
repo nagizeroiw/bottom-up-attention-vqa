@@ -35,7 +35,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
         seen_loss_shape = True
 
     if pair_loss is not None:
-        loss += pair_loss  # works?
+        loss += pair_loss.sum()  # works?
 
     return loss
 
