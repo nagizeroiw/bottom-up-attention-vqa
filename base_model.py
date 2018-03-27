@@ -7,7 +7,7 @@ from fc import FCNet
 
 
 class BaseModel(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, args):
         super(BaseModel, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
@@ -15,6 +15,8 @@ class BaseModel(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
+        self.pair_loss_weight = args.pair_loss_weight
+
         self.seen_back2normal_shape = True
 
     def forward(self, v, b, q, labels):
@@ -70,7 +72,7 @@ class BaseModel(nn.Module):
             if not self.seen_back2normal_shape:
                 print('repr1|repr2', repr1.size())
 
-            pair_loss = -0.01 * (repr1 - repr2).norm(dim=1)  # [batch,]
+            pair_loss = -1. * self.pair_loss_weight * (repr1 - repr2).norm(dim=1)  # [batch,]
             if not self.seen_back2normal_shape:
                 print('pair_loss', pair_loss.size())
 
@@ -86,7 +88,7 @@ class BaseModel(nn.Module):
             return logits, pair_loss
         return logits
 
-def build_baseline0(dataset, num_hid):
+def build_baseline0(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
     v_att = Attention(dataset.v_dim, q_emb.num_hid, num_hid)
@@ -94,10 +96,10 @@ def build_baseline0(dataset, num_hid):
     v_net = FCNet([dataset.v_dim, num_hid])
     classifier = SimpleClassifier(
         num_hid, 2 * num_hid, dataset.num_ans_candidates, 0.5)
-    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier)
+    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
 
 
-def build_baseline0_newatt(dataset, num_hid):
+def build_baseline0_newatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.5)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.5)
     v_att = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid)
@@ -105,4 +107,4 @@ def build_baseline0_newatt(dataset, num_hid):
     v_net = FCNet([dataset.v_dim, num_hid])
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
-    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier)
+    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)

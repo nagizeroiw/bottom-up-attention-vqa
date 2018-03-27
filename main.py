@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
+    parser.add_argument('--pair_loss_weight', type=float, default=0.001, help='alpha in pair loss')
     args = parser.parse_args()
     return args
 
@@ -41,7 +42,7 @@ if __name__ == '__main__':
     print '> data loaded. time: %.2fs' % (time.time() - start)
 
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_dset, args.num_hid).cuda()
+    model = getattr(base_model, constructor)(train_dset, args.num_hid, args).cuda()
     model.w_emb.init_embedding('data/glove6b_init_300d.npy')
 
     model = nn.DataParallel(model).cuda()

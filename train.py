@@ -5,6 +5,7 @@ import torch.nn as nn
 import utils
 from torch.autograd import Variable
 from progressbar import ProgressBar
+import random
 
 seen_loss_shape = False
 
@@ -36,7 +37,8 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
         seen_loss_shape = True
     '''
 
-    print(loss.data[0], pair_loss.data[0])
+    if random.randint(1, 500) == 1:
+        print(loss.data[0], pair_loss.data[0])
     
     if pair_loss is not None:
         loss += pair_loss  # works?
