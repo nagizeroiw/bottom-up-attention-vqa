@@ -74,9 +74,7 @@ class BaseModel(nn.Module):
             if not self.seen_back2normal_shape:
                 print('pair_loss', pair_loss.size())
 
-            pair_loss = pair_loss.repeat(2) # [2 * batch,]
-            if not self.seen_back2normal_shape:
-                print('final pair_loss', pair_loss.size())
+            pair_loss = pair_loss.mean(dim=0, keepdim=True) # [1,]
 
             self.seen_back2normal_shape = True
 

@@ -37,7 +37,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
     '''
     
     if pair_loss is not None:
-        loss += pair_loss.sum()  # works?
+        loss += pair_loss  # works?
 
     return loss
 
@@ -103,7 +103,7 @@ def train(model, train_loader, eval_loader, args):
                 total_loss += loss.data[0] * v.size(0)
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
-                total_pair_loss += pair_loss.sum().data[0] * v.size(0) * 2
+                total_pair_loss += pair_loss.data[0] * v.size(0) * 2
             train_score += batch_score
             bar.update(i)
 
