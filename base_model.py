@@ -15,7 +15,7 @@ class BaseModel(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
-        self.seen_back2normal_shape = False
+        self.seen_back2normal_shape = True
 
     def forward(self, v, b, q, labels):
         """Forward
