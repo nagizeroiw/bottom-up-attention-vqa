@@ -66,10 +66,9 @@ class BaseModel(nn.Module):
             if not self.seen_back2normal_shape:
                 print('joint_repr', joint_repr.size())
 
-            repr1, repr2 = joint_repr[:, :]
+            repr1, repr2 = joint_repr[:, :, 0], joint_repr[:, :, 1]
             if not self.seen_back2normal_shape:
                 print('repr1|repr2', repr1.size())
-            # repr1, repr2 = joint_repr[:, :, 0], joint_repr[:, :, 1]
 
             pair_loss = -0.01 * (repr1 - repr2).norm(dim=1)  # [batch,]
             if not self.seen_back2normal_shape:
