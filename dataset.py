@@ -93,7 +93,9 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
     qid2eid = {}
 
-    for question, answer in zip(questions, answers):
+    qa_pairs = random.shuffle(zip(questions, answers))
+
+    for question, answer in qa_pairs:
         utils.assert_eq(question['question_id'], answer['question_id'])
         utils.assert_eq(question['image_id'], answer['image_id'])
 
@@ -149,16 +151,8 @@ class VQAFeatureDataset(Dataset):
         # train (82783, 36, 6), val (40504, 36, 6)
 
         self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
-
-        # "baseline": only use questions that are covered by the complementary pair list.
-        # self.n_entries = []
-        # for qid1, qid2 in self.pairs:
-        #     self.n_entries.append(self.entries[self.qid2eid[qid1]])
-        #     self.n_entries.append(self.entries[self.qid2eid[qid2]])
-        # self.entries, self.n_entries = self.n_entries, self.entries
-        # random.shuffle(self.entries)
         print('> self.entries loaded %d questions.' % len(self.entries))
-        # "baseline"
+
 
         self.tokenize()
         self.tensorize()

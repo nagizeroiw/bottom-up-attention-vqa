@@ -80,7 +80,9 @@ class BaseModel(nn.Module):
 
             self.seen_back2normal_shape = True
 
-        joint_repr = joint_repr.transpose(1, 2).view(batch * 2, -1)  # [2 * batch, num_hid]
+            joint_repr = joint_repr.transpose(1, 2).view(batch * 2, -1)  # [2 * batch, num_hid]
+
+
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
         if with_pair_loss:
             return logits, pair_loss
