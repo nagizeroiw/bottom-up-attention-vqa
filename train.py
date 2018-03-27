@@ -104,7 +104,7 @@ def train(model, train_loader, eval_loader, args):
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
                 total_pair_loss += pair_loss.data[0] * v.size(0) * 2
-                print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0) * 2)
+                # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0) * 2)
             train_score += batch_score
             bar.update(i)
 
