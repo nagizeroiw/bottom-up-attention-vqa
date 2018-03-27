@@ -66,7 +66,7 @@ class BaseModel(nn.Module):
             if not self.seen_back2normal_shape:
                 print('joint_repr', joint_repr.size())
 
-            repr1, repr2 = joint_repr[:, :, 0], joint_repr[:, :, 1]
+            repr1, repr2 = joint_repr[:, :, 0], joint_repr[:, :, 1]  # [batch, num_hid] * 2
             if not self.seen_back2normal_shape:
                 print('repr1|repr2', repr1.size())
 
@@ -80,6 +80,7 @@ class BaseModel(nn.Module):
 
             self.seen_back2normal_shape = True
 
+        joint_repr = joint_repr.transpose(1, 2).view(batch * 2, -1)  # [2 * batch, num_hid]
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
         if with_pair_loss:
             return logits, pair_loss
