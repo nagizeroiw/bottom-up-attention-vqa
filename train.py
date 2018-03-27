@@ -66,7 +66,7 @@ def train(model, train_loader, eval_loader, args):
     lr = args.lr
 
     utils.create_dir(output)
-    optim = torch.optim.Adam(model.parameters(), lr=lr)
+    optim = torch.optim.Adamax(model.parameters(), lr=lr)
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_score = 0
 
@@ -125,12 +125,13 @@ def train(model, train_loader, eval_loader, args):
         total_time = time.time() - t
 
         logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
-        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.2f, score: %.2f' % (total_loss, total_pair_loss, train_score))
+        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_score: %.2f' % (total_loss, total_pair_loss, train_score))
         logger.write('\teval score: %.2f' % (100 * eval_score))
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
         add_summary_value(tf_writer, 'train_score', train_score, epoch)
         add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
+        add_summary_value(tf_writer, 'pair_loss', total_pair_loss, epoch)
         tf_writer.flush()
 
         if eval_score > best_eval_score:

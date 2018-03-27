@@ -19,8 +19,8 @@ def parse_args():
     parser.add_argument('--output', type=str, default='saved_models/with_log')
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
-    parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
-    parser.add_argument('--pair_loss_weight', type=float, default=1e-5, help='alpha in pair loss')
+    parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
+    parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     args = parser.parse_args()
     return args
 
