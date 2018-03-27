@@ -93,7 +93,8 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
     qid2eid = {}
 
-    qa_pairs = random.shuffle(zip(questions, answers))
+    qa_pairs = zip(questions, answers)
+    qa_pairs = random.shuffle(qa_pairs)
 
     for question, answer in qa_pairs:
         utils.assert_eq(question['question_id'], answer['question_id'])
