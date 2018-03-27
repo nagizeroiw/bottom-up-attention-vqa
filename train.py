@@ -73,6 +73,7 @@ def train(model, train_loader, eval_loader, args):
     for epoch in range(num_epochs):
         total_loss = 0
         train_score = 0
+        total_pair_loss = 0
         t = time.time()
 
         bar = ProgressBar(maxval=len(train_loader))
@@ -80,10 +81,10 @@ def train(model, train_loader, eval_loader, args):
 
         for i, (v, b, q, a) in enumerate(train_loader):
             '''
-                v:features (b, 36, 2048) -> image features (represented by 36 top objects / salient regions)
-                b:spatials (b, 36, 6) -> spatial features (() of 36 top objects)
-                q:question (b, 14) -> question sentence sequence (tokenized)
-                a:target (b, 3129) -> answer target (with soft labels)
+                v:features (b, 2, 36, 2048) -> image features (represented by 36 top objects / salient regions)
+                b:spatials (b, 2, 36, 6) -> spatial features (() of 36 top objects)
+                q:question (b, 2, 14) -> question sentence sequence (tokenized)
+                a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
             v = Variable(v).cuda()
             b = Variable(b).cuda()
@@ -98,7 +99,11 @@ def train(model, train_loader, eval_loader, args):
             optim.zero_grad()
 
             batch_score = compute_score_with_logits(pred, a.data).sum()
-            total_loss += loss.data[0] * v.size(0)
+            if v.dim() == 3:
+                total_loss += loss.data[0] * v.size(0)
+            else:  # v.dim() == 4
+                total_loss += loss.data[0] * v.size(0) * 2
+                total_pair_loss += pair_loss.sum().data[0] * v.size(0) * 2
             train_score += batch_score
             bar.update(i)
 
@@ -106,6 +111,7 @@ def train(model, train_loader, eval_loader, args):
         train_t = time.time() - t
 
         total_loss /= train_loader.dataset.loss_len()
+        total_pair_loss /= train_loader.dataset.loss_len()
         train_score = 100 * train_score / train_loader.dataset.loss_len()
         model.train(False)
         eval_score = evaluate(model, eval_loader)
@@ -114,7 +120,7 @@ def train(model, train_loader, eval_loader, args):
         total_time = time.time() - t
 
         logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
-        logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
+        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.2f, score: %.2f' % (total_loss, total_pair_loss, train_score))
         logger.write('\teval score: %.2f' % (100 * eval_score))
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
