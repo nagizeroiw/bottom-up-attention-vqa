@@ -104,6 +104,7 @@ def train(model, train_loader, eval_loader, args):
 
             batch_score = compute_score_with_logits(pred, a.data).sum()
             if v.dim() == 3:
+                print('?')
                 total_loss += loss.data[0] * v.size(0)
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
