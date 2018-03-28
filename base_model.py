@@ -60,6 +60,8 @@ class BaseModel(nn.Module):
         joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
 
         if with_pair_loss:
+            '''
+            # pair_loss_1
             joint_repr = joint_repr.view(batch, 2, -1)  # [batch, 2, num_hid]
             if not self.seen_back2normal_shape:
                 print('joint_repr', joint_repr.size())
@@ -72,16 +74,23 @@ class BaseModel(nn.Module):
             if not self.seen_back2normal_shape:
                 print('repr1|repr2', repr1.size())
 
+            joint_repr = joint_repr.transpose(1, 2).view(batch * 2, -1)  # [2 * batch, num_hid]
+
             pair_loss = -1. * self.pair_loss_weight * (repr1 - repr2).norm(dim=1)  # [batch,]
             if not self.seen_back2normal_shape:
                 print('pair_loss', pair_loss.size())
+            '''
 
+            # pair_loss_2
+            v_emb = v_emb.view(batch, 2, -1)  # [batch, 2, obj_dim]
+            v_emb = v_emb.transpose(1, 2)  # [batch, obj_dim, 2]
+            emb1, emb2 = v_emb[:, :, 0], v_emb[:, :, 1]  # [batch, obj_dim] * 2
+
+            pair_loss = -1. * self.pair_loss_weight * (emb1 - emb2).norm(dim=1)  # [batch,]
+            
             pair_loss = pair_loss.mean(dim=0, keepdim=True) # [1,]
 
             self.seen_back2normal_shape = True
-
-            joint_repr = joint_repr.transpose(1, 2).view(batch * 2, -1)  # [2 * batch, num_hid]
-
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
         if with_pair_loss:
