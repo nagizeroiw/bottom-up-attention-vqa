@@ -30,18 +30,12 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
     loss *= labels.size(1)
 
-    '''
-    global seen_loss_shape
-    if not seen_loss_shape:
-        print('loss', loss.size())
-        seen_loss_shape = True
-    '''
-
-    if random.randint(1, 100) == 1:
-        print(loss.data[0], pair_loss.data[0])
-    
     if pair_loss is not None:
-        loss += pair_loss  # works?
+
+        if random.randint(1, 100) == 1:
+            print(loss.data[0], pair_loss.data[0])
+
+        loss += pair_loss
 
     return loss
 
@@ -104,7 +98,6 @@ def train(model, train_loader, eval_loader, args):
 
             batch_score = compute_score_with_logits(pred, a.data).sum()
             if v.dim() == 3:
-                print('?')
                 total_loss += loss.data[0] * v.size(0)
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
