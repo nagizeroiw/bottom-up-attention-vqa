@@ -21,7 +21,7 @@ def add_summary_value(writer, key, value, iteration):
     writer.add_summary(summary, iteration)
 
 
-def instance_bce_with_logits(logits, labels, pair_loss=None):
+def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None):
     assert logits.dim() == 2
     if labels.dim() == 3:  # handle data with pair
         _, batch_size, n_answers = labels.size()
@@ -33,7 +33,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None):
     if pair_loss is not None:
 
         if random.randint(1, 100) == 1:
-            print(loss.data[0], pair_loss.data[0])
+            print(loss.data[0], pair_loss.data[0], raw_pair_loss.data[0])
 
         loss += pair_loss
 
@@ -72,6 +72,7 @@ def train(model, train_loader, eval_loader, args):
         total_loss = 0
         train_score = 0
         total_pair_loss = 0
+        total_raw_pair_loss = 0
         t = time.time()
 
         bar = ProgressBar(maxval=len(train_loader))
@@ -89,7 +90,7 @@ def train(model, train_loader, eval_loader, args):
             q = Variable(q).cuda()
             a = Variable(a).cuda()
 
-            pred, pair_loss = model(v, b, q, a)
+            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             loss = instance_bce_with_logits(pred, a, pair_loss)
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), 0.25)
@@ -102,6 +103,7 @@ def train(model, train_loader, eval_loader, args):
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
                 total_pair_loss += pair_loss.data[0] * v.size(0) * 2
+                total_raw_pair_loss += raw_pair_loss.data[0] * v.size(0) * 2
                 # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))
             train_score += batch_score
             bar.update(i)
@@ -111,6 +113,7 @@ def train(model, train_loader, eval_loader, args):
 
         total_loss /= train_loader.dataset.loss_len()
         total_pair_loss /= train_loader.dataset.loss_len()
+        total_raw_pair_loss /= train_loader.dataset.loss_len()
         train_score = 100 * train_score / train_loader.dataset.loss_len()
         model.train(False)
         eval_score = evaluate(model, eval_loader)
@@ -119,7 +122,7 @@ def train(model, train_loader, eval_loader, args):
         total_time = time.time() - t
 
         logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
-        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_score: %.2f' % (total_loss, total_pair_loss, train_score))
+        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
         logger.write('\teval score: %.2f' % (100 * eval_score))
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
@@ -142,7 +145,7 @@ def evaluate(model, dataloader):
         v = Variable(v, volatile=True).cuda()
         b = Variable(b, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
-        pred, _ = model(v, b, q, None)
+        pred, _, __ = model(v, b, q, None)
         batch_score = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
         num_data += pred.size(0)

@@ -87,6 +87,7 @@ class BaseModel(nn.Module):
             emb1, emb2 = v_emb[:, :, 0], v_emb[:, :, 1]  # [batch, obj_dim] * 2
 
             pair_loss = -1. * self.pair_loss_weight * (emb1 - emb2).norm(dim=1)  # [batch,]
+            raw_pair_loss = (emb1 - emb2).norm(dim=1)
             
             pair_loss = pair_loss.mean(dim=0, keepdim=True) # [1,]
 
@@ -94,7 +95,7 @@ class BaseModel(nn.Module):
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
         if with_pair_loss:
-            return logits, pair_loss
+            return logits, pair_loss, raw_pair_loss
         return logits, None
 
 def build_baseline0(dataset, num_hid, args):
