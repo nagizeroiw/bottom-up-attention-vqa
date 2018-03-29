@@ -95,7 +95,7 @@ class BaseModel(nn.Module):
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
         if with_pair_loss:
             return logits, pair_loss, raw_pair_loss
-        return logits, None
+        return logits, None, None
 
 def build_baseline0(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
