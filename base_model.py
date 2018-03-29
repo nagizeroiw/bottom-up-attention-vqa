@@ -86,9 +86,8 @@ class BaseModel(nn.Module):
             v_emb = v_emb.transpose(1, 2)  # [batch, obj_dim, 2]
             emb1, emb2 = v_emb[:, :, 0], v_emb[:, :, 1]  # [batch, obj_dim] * 2
 
-            pair_loss = -1. * self.pair_loss_weight * (emb1 - emb2).norm(dim=1)  # [batch,]
-            raw_pair_loss = (emb1 - emb2).norm(dim=1)
-            
+            raw_pair_loss = (emb1 - emb2).norm(dim=1) # [batch,]
+            pair_loss = -1. * self.pair_loss_weight * raw_pair_loss  # [batch,]            
             pair_loss = pair_loss.mean(dim=0, keepdim=True) # [1,]
 
             self.seen_back2normal_shape = True
