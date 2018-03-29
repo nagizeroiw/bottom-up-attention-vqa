@@ -91,7 +91,7 @@ def train(model, train_loader, eval_loader, args):
             a = Variable(a).cuda()
 
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
-            loss = instance_bce_with_logits(pred, a, pair_loss)
+            loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), 0.25)
             optim.step()
