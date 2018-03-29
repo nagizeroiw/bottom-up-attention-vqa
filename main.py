@@ -21,6 +21,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
+    parser.add_argument('--use_pair', type=bool, default=True, help='whether use pair-wise batch feeding')
     args = parser.parse_args()
     return args
 
@@ -35,7 +36,10 @@ if __name__ == '__main__':
     start = time.time()
 
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-    train_dset = VQAFeatureDataset('train', dictionary)
+    if args.use_pair:
+        train_dset = VQAFeatureDatasetWithPair('train', dictionary)
+    else:
+        train_dset = VQAFeatureDataset('train', dictionary)
     eval_dset = VQAFeatureDataset('val', dictionary)
     batch_size = args.batch_size
 
