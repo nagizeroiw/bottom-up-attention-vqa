@@ -112,6 +112,9 @@ def train(model, train_loader, eval_loader, args):
             a = Variable(a).cuda()
 
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
+            raw_pair_loss = raw_pair_loss.mean()
+            assert raw_pair_loss.size() == (1,)
+            assert pair_loss.size() == (1,)
             loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), args.grad_clip_rate)
@@ -174,6 +177,7 @@ def evaluate(model, dataloader):
         b = Variable(b, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
         pred, pair_loss, raw_pair_loss = model(v, b, q, None)
+        raw_pair_loss = raw_pair_loss.mean()
         batch_score = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
         num_data += pred.size(0)
