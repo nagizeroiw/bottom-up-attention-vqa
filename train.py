@@ -53,6 +53,20 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
+def measure(model, train_loader, eval_loader, args):
+
+    # load from start_with
+    assert args.start_with is not None
+    saved_model = torch.load()
+
+    for epoch in range(num_epochs):
+
+        bar = ProgressBar(maxval=len(train_loader))
+        bar.start()
+        for i, (v, b, q, a) in enumerate(train_loader):
+
+
+
 def train(model, train_loader, eval_loader, args):
 
     num_epochs = args.epochs
@@ -116,14 +130,16 @@ def train(model, train_loader, eval_loader, args):
         total_raw_pair_loss /= train_loader.dataset.loss_len()
         train_score = 100 * train_score / train_loader.dataset.loss_len()
         model.train(False)
-        eval_score = evaluate(model, eval_loader)
+        eval_score, eval_pair_loss, eval_raw_pair_loss = evaluate(model, eval_loader)
         model.train(True)
 
         total_time = time.time() - t
 
         logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
-        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
-        logger.write('\teval score: %.2f' % (100 * eval_score))
+        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
+            (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
+        logger.write('\teval score: %.2f, eval_pair_loss: %.7f, eval_raw_pair_loss: %.7f' % \
+            (100 * eval_score, eval_pair_loss, eval_raw_pair_loss))
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
         add_summary_value(tf_writer, 'train_score', train_score, epoch)
@@ -142,14 +158,20 @@ def train(model, train_loader, eval_loader, args):
 def evaluate(model, dataloader):
     score = 0
     num_data = 0
+    total_pair_loss = 0
+    total_raw_pair_loss = 0
     for v, b, q, a in iter(dataloader):
         v = Variable(v, volatile=True).cuda()
         b = Variable(b, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
-        pred, _, __ = model(v, b, q, None)
+        pred, pair_loss, raw_pair_loss = model(v, b, q, None)
         batch_score = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
         num_data += pred.size(0)
+        total_pair_loss += pair_loss.data[0] * v.size(0) * 2
+        total_raw_pair_loss += raw_pair_loss.data[0] * v.size(0) * 2
 
+    total_pair_loss /= dataloader.dataset.loss_len()
+    total_raw_pair_loss /= dataloader.dataset.loss_len()
     score = score / dataloader.dataset.loss_len()
-    return score
+    return score, total_pair_loss, total_raw_pair_loss

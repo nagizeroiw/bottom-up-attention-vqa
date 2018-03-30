@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0_newatt')
     parser.add_argument('--output', type=str, default='saved_models/with_log')
+    parser.add_argument('--start_with', type=str, default=None)
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
@@ -41,7 +42,7 @@ if __name__ == '__main__':
         train_dset = VQAFeatureDatasetWithPair('train', dictionary)
     else:
         train_dset = VQAFeatureDataset('train', dictionary)
-    eval_dset = VQAFeatureDataset('val', dictionary)
+    eval_dset = VQAFeatureDatasetWithPair('val', dictionary)
     batch_size = args.batch_size
 
     print '> data loaded. time: %.2fs' % (time.time() - start)
