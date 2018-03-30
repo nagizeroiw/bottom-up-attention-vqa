@@ -64,7 +64,7 @@ def measure(model, train_loader, eval_loader, args):
         bar = ProgressBar(maxval=len(train_loader))
         bar.start()
         for i, (v, b, q, a) in enumerate(train_loader):
-
+            pass
 
 
 def train(model, train_loader, eval_loader, args):
