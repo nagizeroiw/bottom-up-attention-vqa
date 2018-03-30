@@ -52,7 +52,6 @@ class NewAttention(nn.Module):
         #################### tanh
         v_proj = self.v_proj(v) # [batch, k, qdim]
         q_proj = self.q_proj(q).unsqueeze(1).repeat(1, k, 1)
-        v_proj, q_proj = nn.functional.tanh(v_proj), nn.functional.tanh(q_proj)
         joint_repr = v_proj * q_proj  # was cat[v, q]
         joint_repr = self.dropout(joint_repr)
         logits = self.linear(joint_repr)

@@ -93,7 +93,7 @@ def train(model, train_loader, eval_loader, args):
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
             loss.backward()
-            nn.utils.clip_grad_norm(model.parameters(), 0.25)
+            nn.utils.clip_grad_norm(model.parameters(), args.grad_clip_rate)
             optim.step()
             optim.zero_grad()
 
@@ -129,7 +129,7 @@ def train(model, train_loader, eval_loader, args):
         add_summary_value(tf_writer, 'train_score', train_score, epoch)
         add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
         add_summary_value(tf_writer, 'pair_loss', total_pair_loss, epoch)
-        add_summary_value(tf_writer, 'raw_pair_loss', total_pair_loss, epoch)
+        add_summary_value(tf_writer, 'raw_pair_loss', total_raw_pair_loss, epoch)
         tf_writer.flush()
 
         if eval_score > best_eval_score:

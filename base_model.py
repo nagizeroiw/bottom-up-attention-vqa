@@ -54,7 +54,6 @@ class BaseModel(nn.Module):
 
         att = self.v_att(v, q_emb)  # attention weight [2 * batch, num_objs, obj_dim]
         v_emb = (att * v).sum(1)  # attended feature vector [2 * batch, obj_dim]
-        v_emb = nn.functional.tanh(v_emb)
 
         q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
         v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
