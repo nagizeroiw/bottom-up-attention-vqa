@@ -7,12 +7,13 @@ import numpy as np
 
 from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair
 import base_model
-from train import train
+from train import train, measure
 import utils
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--task', type=str, default='train', help='train|measure')
     parser.add_argument('--epochs', type=int, default=40)
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0_newatt')
@@ -55,4 +56,7 @@ if __name__ == '__main__':
 
     train_loader = DataLoader(train_dset, batch_size / 2, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
-    train(model, train_loader, eval_loader, args)
+    if args.task == 'train':
+        train(model, train_loader, eval_loader, args)
+    elif args.task == 'measure':
+        measure(model, train_loader, eval_loader, args)

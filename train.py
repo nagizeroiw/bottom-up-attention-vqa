@@ -57,14 +57,21 @@ def measure(model, train_loader, eval_loader, args):
 
     # load from start_with
     assert args.start_with is not None
-    saved_model = torch.load()
+    saved_model = torch.load(os.path.join(args.start_with, 'model.pth'))
 
     for epoch in range(num_epochs):
 
         bar = ProgressBar(maxval=len(train_loader))
         bar.start()
         for i, (v, b, q, a) in enumerate(train_loader):
-            pass
+            v = Variable(v).cuda()
+            b = Variable(b).cuda()
+            q = Variable(q).cuda()
+            a = Variable(a).cuda()
+
+            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
+            bar.update(i)
+        bar.finish()
 
 
 def train(model, train_loader, eval_loader, args):
@@ -146,6 +153,8 @@ def train(model, train_loader, eval_loader, args):
         add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
         add_summary_value(tf_writer, 'pair_loss', total_pair_loss, epoch)
         add_summary_value(tf_writer, 'raw_pair_loss', total_raw_pair_loss, epoch)
+        add_summary_value(tf_writer, 'eval_pair_loss', eval_pair_loss)
+        add_summary_value(tf_writer, 'eval_raw_pair_loss', eval_raw_pair_loss)
         tf_writer.flush()
 
         if eval_score > best_eval_score:
