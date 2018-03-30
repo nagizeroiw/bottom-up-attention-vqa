@@ -156,8 +156,8 @@ def train(model, train_loader, eval_loader, args):
         add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
         add_summary_value(tf_writer, 'pair_loss', total_pair_loss, epoch)
         add_summary_value(tf_writer, 'raw_pair_loss', total_raw_pair_loss, epoch)
-        add_summary_value(tf_writer, 'eval_pair_loss', eval_pair_loss)
-        add_summary_value(tf_writer, 'eval_raw_pair_loss', eval_raw_pair_loss)
+        add_summary_value(tf_writer, 'eval_pair_loss', eval_pair_loss, epoch)
+        add_summary_value(tf_writer, 'eval_raw_pair_loss', eval_raw_pair_loss, epoch)
         tf_writer.flush()
 
         if eval_score > best_eval_score:
