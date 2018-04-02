@@ -5,4 +5,4 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     --epochs 40 \
     --pair_loss_weight 0
     --task measure
-    --start_from saved_models/pair_loss_t2
+    --start_with saved_models/pair_loss_t2
