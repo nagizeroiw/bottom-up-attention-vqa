@@ -107,9 +107,9 @@ def train(model, train_loader, eval_loader, args):
                 a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
             v = Variable(v, requires_grad=True).cuda()
-            b = Variable(b, requires_grad=True).cuda()
-            q = Variable(q, requires_grad=True).cuda()
-            a = Variable(a, requires_grad=True).cuda()
+            b = Variable(b).cuda()
+            q = Variable(q).cuda()
+            a = Variable(a).cuda()
 
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             raw_pair_loss = raw_pair_loss.mean()
