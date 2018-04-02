@@ -130,31 +130,33 @@ def train(model, train_loader, eval_loader, args):
             bar.update(i)
 
         bar.finish()
-        train_t = time.time() - t
 
         total_loss /= train_loader.dataset.loss_len()
         total_pair_loss /= train_loader.dataset.loss_len()
         total_raw_pair_loss /= train_loader.dataset.loss_len()
         train_score = 100 * train_score / train_loader.dataset.loss_len()
+
+        train_time = time.time() - t
+
+        logger.write('> epoch %d, train time: %.2f' % (epoch, train_time))
+        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
+            (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
+
         model.train(False)
         eval_score, eval_pair_loss, eval_raw_pair_loss = evaluate(model, eval_loader)
         model.train(True)
 
-        total_time = time.time() - t
-
-        logger.write('> epoch %d, time: %.2f (train %.2f eval %.2f)' % (epoch, total_time, train_t, total_time - train_t))
-        logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
-            (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
-        logger.write('\teval score: %.2f, eval_pair_loss: %.7f, eval_raw_pair_loss: %.7f' % \
+        logger.write('> validation time: %.2f' % (time.time() - train_time))
+        logger.write('\tvalid score: %.2f, valid_pair_loss: %.7f, valid_raw_pair_loss: %.7f' % \
             (100 * eval_score, eval_pair_loss, eval_raw_pair_loss))
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
         add_summary_value(tf_writer, 'train_score', train_score, epoch)
-        add_summary_value(tf_writer, 'eval_score', 100 * eval_score, epoch)
+        add_summary_value(tf_writer, 'valid_score', 100 * eval_score, epoch)
         add_summary_value(tf_writer, 'pair_loss', total_pair_loss, epoch)
         add_summary_value(tf_writer, 'raw_pair_loss', total_raw_pair_loss, epoch)
-        add_summary_value(tf_writer, 'eval_pair_loss', eval_pair_loss, epoch)
-        add_summary_value(tf_writer, 'eval_raw_pair_loss', eval_raw_pair_loss, epoch)
+        add_summary_value(tf_writer, 'valid_pair_loss', eval_pair_loss, epoch)
+        add_summary_value(tf_writer, 'valid_raw_pair_loss', eval_raw_pair_loss, epoch)
         tf_writer.flush()
 
         if eval_score > best_eval_score:
@@ -170,12 +172,13 @@ def evaluate(model, dataloader):
     total_pair_loss = 0
     total_raw_pair_loss = 0
     for v, b, q, a in iter(dataloader):
-        v = Variable(v, volatile=True).cuda()
-        b = Variable(b, volatile=True).cuda()
-        q = Variable(q, volatile=True).cuda()
-        pred, pair_loss, raw_pair_loss = model(v, b, q, None)
+        v = Variable(v, requires_grad=True).cuda()
+        b = Variable(b).cuda()
+        q = Variable(q).cuda()
+        a = Variable(a).cuda()
+        pred, pair_loss, raw_pair_loss = model(v, b, q, a)
         raw_pair_loss = raw_pair_loss.mean()
-        batch_score = compute_score_with_logits(pred, a.cuda()).sum()
+        batch_score = compute_score_with_logits(pred, a).sum()
         score += batch_score
         num_data += pred.size(0)
         total_pair_loss += pair_loss.data[0] * v.size(0) * 2
