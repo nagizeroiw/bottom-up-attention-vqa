@@ -1,3 +1,4 @@
+from __future__ import print_function
 import torch
 import torch.nn as nn
 from attention import Attention, NewAttention
@@ -60,11 +61,11 @@ class BaseModel(nn.Module):
 
         att = self.v_att(v, q_emb)  # attention weight [2 * batch, num_objs, obj_dim]
         v_emb = (att * v).sum(1)  # attended feature vector [2 * batch, obj_dim]
+        v_emb.retain_grad()
 
         q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
         v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
         joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
-
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
 
@@ -93,56 +94,66 @@ class BaseModel(nn.Module):
             '''
 
             ### pair_loss_3 (max_margin)
+            labels1, labels2 = labels[:, 0, :], labels[:, 1, :]  # [batch, n_ans] * 2
+
             logits = logits.view(batch, 2, -1)  # [batch, 2, n_ans]
             logits1, logits2 = logits[:, 0, :], logits[:, 1, :]  # [batch, n_ans] * 2
-            self.see(logits1, 'logits1')
-            self.see(logits2, 'logits2')
-            labels1, labels2 = labels[:, 0, :], labels[:, 1, :]  # [batch, n_ans] * 2
-            self.see(labels1, 'labels1')
-            self.see(labels2, 'labels2')
-            v_emb = v_emb.view(batch, 2, -1)  # [batch, 2, obj_dim]
-            v_emb = Variable(v_emb.data, requires_grad=True)  # ?
-            v1, v2 = v_emb[:, 0, :], v_emb[:, 1, :]
-            self.see(v1, 'v1')
-            self.see(v2, 'v2')
 
-            f_2_1 = logits1 * labels2 - logits1 * labels1
-            f_1_2 = logits2 * labels1 - logits2 * labels2
-            self.see(f_2_1, 'f_2_1')
-            self.see(f_1_2, 'f_1_2')
-
-            logits1.backward(labels2)
-            t = v_emb.grad
-            self.see(t, 'v_emb.grad')
-            df2_1 = v1.grad  # shape?
-            self.see(df2_1, 'df2_1')
-            self.zero_grad()
-            logits1.backward(labels1)
-            df1_1 = v1.grad
-            self.see(df1_1, 'df1_1')
-            self.zero_grad()
-            logits2.backward(labels1)
-            df1_2 = v2.grad
-            self.see(df1_2, 'df1_2')
-            self.zero_grad()
-            logits2.backward(labels2)
-            df2_2 = v2.grad
-            self.see(df2_2, 'df2_2')
+            logits1.backward(labels2, retain_graph=True)
+            df2_1 = v_emb.grad  # [batch * 2, v_dim]
+            df2_1 = df2_1.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
+            # print('df2_1', df2_1.size())
             self.zero_grad()
 
-            ploss_1 = f_2_1.sum(dim=1) / (df2_1 - df1_1).norm(dim=1)
-            ploss_2 = f_1_2.sum(dim=1) / (df1_2 - df2_2).norm(dim=1)
-            self.see(ploss_1, 'ploss_1')
-            self.see(ploss_2, 'ploss_2')
+            logits1.backward(labels1, retain_graph=True)
+            df1_1 = v_emb.grad  # [batch * 2, v_dim]
+            df1_1 = df1_1.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
+            # print('df1_1', df1_1.size())
+            self.zero_grad()
 
-            pair_loss = (ploss_1 + ploss_2).mean(keepdim=True)
-            print(pair_loss)
+            logits2.backward(labels1, retain_graph=True)
+            df1_2 = v_emb.grad  # [batch * 2, v_dim]
+            df1_2 = df1_2.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
+            # print('df1_2', df2_1.size())
+            self.zero_grad()
+
+            logits2.backward(labels2, retain_graph=True)
+            df2_2 = v_emb.grad  # [batch * 2, v_dim]
+            df2_2 = df2_2.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
+            # print('df2_2', df2_1.size())
+            self.zero_grad()
+
+            # ~ 1e-3
+            # print(torch.max(df2_1), torch.max(df1_1), torch.max(df1_2), torch.max(df2_2))
+
+            logits = logits.view(batch * 2, -1)  # [batch * 2, n_ans]
+
+            ################################################################################
+
+            f_2_1 = logits1 * labels2 - logits1 * labels1  # [batch, n_ans]
+            f_1_2 = logits2 * labels1 - logits2 * labels2  # [batch, n_ans]
+
+            # ~ 1e-3
+            # print(f_2_1.sum(dim=1).mean(dim=0).item())
+
+            # ~ 5e-3
+            # print((df2_1 - df1_1).norm(2, dim=1).mean(dim=0).item())
+
+            pair_loss_1 = f_2_1.sum(dim=1) / ((df2_1 - df1_1).norm(2, dim=1) + 1e-8)  # [batch,]
+            pair_loss_2 = f_1_2.sum(dim=1) / ((df1_2 - df2_2).norm(2, dim=1) + 1e-8)  # [batch,]
+
+            pair_loss_1 = pair_loss_1.clamp(-50., 50.)
+            pair_loss_2 = pair_loss_2.clamp(-50., 50.)
+            # print(pair_loss_1.mean().item())
 
             self.seen_back2normal_shape = True
+            raw_pair_loss = (pair_loss_1).mean()
+            pair_loss = self.pair_loss_weight * raw_pair_loss
 
         if with_pair_loss:
             return logits, pair_loss, raw_pair_loss
         return logits, None, None
+
 
 def build_baseline0(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
