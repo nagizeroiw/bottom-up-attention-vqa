@@ -172,17 +172,20 @@ def evaluate(model, dataloader):
     total_pair_loss = 0
     total_raw_pair_loss = 0
     for v, b, q, a in iter(dataloader):
-        v = Variable(v, requires_grad=True).cuda()
-        b = Variable(b).cuda()
-        q = Variable(q).cuda()
-        a = Variable(a).cuda()
-        pred, pair_loss, raw_pair_loss = model(v, b, q, a)
-        raw_pair_loss = raw_pair_loss.mean()
-        batch_score = compute_score_with_logits(pred, a).sum()
-        score += batch_score
-        num_data += pred.size(0)
-        total_pair_loss += pair_loss.data[0] * v.size(0) * 2
-        total_raw_pair_loss += raw_pair_loss.data[0] * v.size(0) * 2
+        with torch.no_grad():
+            v = Variable(v).cuda()
+            b = Variable(b).cuda()
+            q = Variable(q).cuda()
+            a = Variable(a).cuda()
+            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
+            raw_pair_loss = raw_pair_loss.mean()
+            batch_score = compute_score_with_logits(pred, a).sum()
+            score += batch_score
+            num_data += pred.size(0)
+            if pair_loss is not None:
+                total_pair_loss += pair_loss.item() * v.size(0) * 2
+            if raw_pair_loss is not None:
+                total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
 
     total_pair_loss /= dataloader.dataset.loss_len()
     total_raw_pair_loss /= dataloader.dataset.loss_len()
