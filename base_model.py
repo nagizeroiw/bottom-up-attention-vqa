@@ -128,8 +128,8 @@ class BaseModel(nn.Module):
             self.see(df2_2, 'df2_2')
             self.zero_grad()
 
-            ploss_1 = f_2_1 / (df2_1 - df1_1).norm(dim=1)
-            ploss_2 = f_1_2 / (df1_2 - df2_2).norm(dim=1)
+            ploss_1 = f_2_1.sum(dim=1) / (df2_1 - df1_1).norm(dim=1)
+            ploss_2 = f_1_2.sum(dim=1) / (df1_2 - df2_2).norm(dim=1)
             self.see(ploss_1, 'ploss_1')
             self.see(ploss_2, 'ploss_2')
 
