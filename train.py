@@ -120,9 +120,9 @@ def train(model, train_loader, eval_loader, args):
 
             batch_score = compute_score_with_logits(pred, a.data).sum()
             if v.dim() == 3:
-                total_loss += loss.data[0] * v.size(0)
+                total_loss += loss.item() * v.size(0)
             else:  # v.dim() == 4
-                total_loss += loss.data[0] * v.size(0) * 2
+                total_loss += loss.item() * v.size(0) * 2
                 # total_pair_loss += pair_loss.data[0] * v.size(0) * 2
                 # total_raw_pair_loss += raw_pair_loss.data[0] * v.size(0) * 2
                 # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))

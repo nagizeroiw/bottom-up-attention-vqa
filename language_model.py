@@ -39,9 +39,10 @@ class QuestionEmbedding(nn.Module):
         self.rnn = rnn_cls(
             in_dim, num_hid, nlayers,
             bidirectional=bidirect,
-            dropout=dropout,
+            dropout=0,
             batch_first=True)
 
+        self.dropout = nn.Dropout(dropout)
         self.in_dim = in_dim
         self.num_hid = num_hid
         self.nlayers = nlayers
@@ -60,6 +61,7 @@ class QuestionEmbedding(nn.Module):
 
     def forward(self, x):
         # x: [batch, sequence, in_dim]
+        x = self.dropout(x)
         batch = x.size(0)
         hidden = self.init_hidden(batch)
         self.rnn.flatten_parameters()
