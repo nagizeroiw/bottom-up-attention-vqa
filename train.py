@@ -33,7 +33,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None)
     if pair_loss is not None:
 
         if random.randint(1, 100) == 1:
-            print(loss.data[0], pair_loss.data[0], raw_pair_loss.data[0])
+            print(loss.item(), pair_loss.item(), raw_pair_loss.item())
 
         loss += pair_loss
 
