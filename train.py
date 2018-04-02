@@ -178,7 +178,6 @@ def evaluate(model, dataloader):
             q = Variable(q).cuda()
             a = Variable(a).cuda()
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
-            raw_pair_loss = raw_pair_loss.mean()
             batch_score = compute_score_with_logits(pred, a).sum()
             score += batch_score
             num_data += pred.size(0)
