@@ -55,6 +55,7 @@ def compute_score_with_logits(logits, labels):
 
 def measure(model, train_loader, eval_loader, args):
 
+    num_epochs = args.epochs
     # load from start_with
     assert args.start_with is not None
     saved_model = torch.load(os.path.join(args.start_with, 'model.pth'))
