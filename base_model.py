@@ -4,6 +4,7 @@ from attention import Attention, NewAttention
 from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
 from fc import FCNet
+from torch.autograd import Variable
 
 
 class BaseModel(nn.Module):
@@ -100,6 +101,7 @@ class BaseModel(nn.Module):
             self.see(labels1, 'labels1')
             self.see(labels2, 'labels2')
             v_emb = v_emb.view(batch, 2, -1)  # [batch, 2, obj_dim]
+            v_emb = Variable(v_emb, requires_grad=True)  # ?
             v1, v2 = v_emb[:, 0, :], v_emb[:, 1, :]
             self.see(v1, 'v1')
             self.see(v2, 'v2')
