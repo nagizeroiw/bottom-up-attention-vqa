@@ -112,9 +112,6 @@ def train(model, train_loader, eval_loader, args):
             a = Variable(a).cuda()
 
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
-            raw_pair_loss = raw_pair_loss.mean()
-            assert raw_pair_loss.size() == (1,)
-            assert pair_loss.size() == (1,)
             optim.zero_grad()
             loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
             loss.backward()
