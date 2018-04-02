@@ -21,7 +21,7 @@ class BaseModel(nn.Module):
 
     def see(self, var, name):
         if not self.seen_back2normal_shape:
-            print('name', var.size())
+            print(name, var.size())
 
     def forward(self, v, b, q, labels):
         """Forward
@@ -110,6 +110,8 @@ class BaseModel(nn.Module):
             self.see(f_1_2, 'f_1_2')
 
             logits1.backward(labels2)
+            t = v_emb.grad
+            self.see(t, 'v_emb.grad')
             df2_1 = v1.grad  # shape?
             self.see(df2_1, 'df2_1')
             self.zero_grad()
