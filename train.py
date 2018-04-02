@@ -87,8 +87,7 @@ def train(model, train_loader, eval_loader, args):
 
     tf_writer = tf and tf.summary.FileWriter(os.path.join(output, 'tf_log/'))
 
-    logger.write('> start training')
-
+    logger.write('> start training') 
     for epoch in range(num_epochs):
         total_loss = 0
         train_score = 0

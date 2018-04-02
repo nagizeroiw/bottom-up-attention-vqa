@@ -17,7 +17,7 @@ class BaseModel(nn.Module):
         self.classifier = classifier
         self.pair_loss_weight = args.pair_loss_weight
 
-        self.seen_back2normal_shape = True
+        self.seen_back2normal_shape = False
 
     def see(self, var, name):
         if not self.seen_back2normal_shape:
@@ -124,6 +124,7 @@ class BaseModel(nn.Module):
             logits2.backward(labels2)
             df2_2 = v2.grad
             self.see(df2_2, 'df2_2')
+            self.zero_grad()
 
             ploss_1 = f_2_1 / (df2_1 - df1_1).norm(dim=1)
             ploss_2 = f_1_2 / (df1_2 - df2_2).norm(dim=1)
@@ -132,6 +133,8 @@ class BaseModel(nn.Module):
 
             pair_loss = (ploss_1 + ploss_2).mean(keepdim=True)
             print(pair_loss)
+
+            self.seen_back2normal_shape = True
 
         if with_pair_loss:
             return logits, pair_loss, raw_pair_loss
