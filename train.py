@@ -112,6 +112,7 @@ def train(model, train_loader, eval_loader, args):
             q = Variable(q).cuda()
             a = Variable(a).cuda()
 
+            optim.zero_grad()
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             optim.zero_grad()
             loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
