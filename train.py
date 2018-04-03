@@ -35,6 +35,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None)
         if random.randint(1, 100) == 1:
             print(loss.item(), pair_loss.item(), raw_pair_loss.item())
 
+            print(type(loss), type(pair_loss))
         loss += pair_loss
 
     return loss
