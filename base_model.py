@@ -20,6 +20,7 @@ class BaseModel(nn.Module):
         self.classifier = classifier
         self.pair_loss_weight = args.pair_loss_weight
         self.pair_loss_type = args.pair_loss_type
+        self.gamma = args.gamma
 
         self.seen_back2normal_shape = False
 
@@ -72,17 +73,8 @@ class BaseModel(nn.Module):
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
 
         if with_pair_loss:
-            '''
-            ### pair_loss_1 (on joint representations)
-            
-            '''
 
-            '''
-            ### pair_loss_2 (on attended image features)
-            
-            '''
-
-            ### pair_loss_3 (max_margin)
+            ### pair_loss_2 (@attended image feature)
             if self.pair_loss_type == '@att':
                 v_emb = v_emb.view(batch, 2, -1)  # [batch, 2, obj_dim]
                 v_emb = v_emb.transpose(1, 2)  # [batch, obj_dim, 2]
@@ -95,6 +87,7 @@ class BaseModel(nn.Module):
 
                 self.seen_back2normal_shape = True
 
+            ### pair_loss_1 (@joint representation)
             elif self.pair_loss_type == '@repr':
                 joint_repr = joint_repr.view(batch, 2, -1)  # [batch, 2, num_hid]
                 joint_repr = joint_repr.transpose(1, 2)  # [batch, num_hid, 2]
@@ -108,66 +101,63 @@ class BaseModel(nn.Module):
 
                 self.seen_back2normal_shape = True
 
+            ### pair_loss_3 (max-margin style pair loss)
             elif self.pair_loss_type == 'margin':
                 labels1, labels2 = labels[:, 0, :], labels[:, 1, :]  # [batch, n_ans] * 2
 
                 logits = logits.view(batch, 2, -1)  # [batch, 2, n_ans]
                 logits1, logits2 = logits[:, 0, :], logits[:, 1, :]  # [batch, n_ans] * 2
 
+                df2_1 = torch.FloatTensor(batch, obj_dim)
+                df1_1 = torch.FloatTensor(batch, obj_dim)
+                df1_2 = torch.FloatTensor(batch, obj_dim)
+                df2_2 = torch.FloatTensor(batch, obj_dim)
+
                 logits1.backward(labels2, retain_graph=True)
-                df2_1 = v_emb.grad  # [batch * 2, v_dim]
-                df2_1 = df2_1.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
-                # print('df2_1', df2_1.size())
+                df2_1[:, :] = v_emb.grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 logits1.backward(labels1, retain_graph=True)
-                df1_1 = v_emb.grad  # [batch * 2, v_dim]
-                df1_1 = df1_1.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
-                # print('df1_1', df1_1.size())
+                df1_1[:, :] = v_emb.grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 logits2.backward(labels1, retain_graph=True)
-                df1_2 = v_emb.grad  # [batch * 2, v_dim]
-                df1_2 = df1_2.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
-                # print('df1_2', df2_1.size())
+                df1_2[:, :] = v_emb.grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 logits2.backward(labels2, retain_graph=True)
-                df2_2 = v_emb.grad  # [batch * 2, v_dim]
-                df2_2 = df2_2.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
-                # print('df2_2', df2_1.size())
+                df2_2[:, :] = v_emb.grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
                 v_emb.grad.zero_()
                 self.zero_grad()
 
-                # ~ 1e-3
-                if random.randint(1, 100) == 1:
-                    print('df', torch.max(df2_1).item(), torch.max(df1_1).item(), torch.max(df1_2).item(), torch.max(df2_2).item())
-
                 logits = logits.view(batch * 2, -1)  # [batch * 2, n_ans]
 
-                ################################################################################
-
+                ##### computing pair loss
                 f_2_1 = logits1 * labels2 - logits1 * labels1  # [batch, n_ans]
                 f_1_2 = logits2 * labels1 - logits2 * labels2  # [batch, n_ans]
 
-                # ~ 1e-3
-                # print(f_2_1.sum(dim=1).mean(dim=0).item())
+                df2_1 = Variable(df2_1).cuda()
+                df1_1 = Variable(df1_1).cuda()
+                df1_2 = Variable(df1_2).cuda()
+                df2_2 = Variable(df2_2).cuda()
 
-                # ~ 5e-3
-                # print((df2_1 - df1_1).norm(2, dim=1).mean(dim=0).item())
+                mk1 = df2_1 - df1_1
+                mk2 = df1_2 - df2_2
 
-                pair_loss_1 = f_2_1.sum(dim=1) / ((df2_1 - df1_1).norm(2, dim=1) + 1e-8)  # [batch,]
-                pair_loss_2 = f_1_2.sum(dim=1) / ((df1_2 - df2_2).norm(2, dim=1) + 1e-8)  # [batch,]
+                pair_loss_1 = f_2_1.sum(dim=1) / (mk1.norm(2, dim=1) + 1e-8)  # [batch,]
+                pair_loss_2 = f_1_2.sum(dim=1) / (mk2.norm(2, dim=1) + 1e-8)  # [batch,]
 
                 pair_loss_1 = pair_loss_1.clamp(-50., 50.)
                 pair_loss_2 = pair_loss_2.clamp(-50., 50.)
-                # print(pair_loss_1.mean().item())
+
+                pair_loss_1 = torch.max(pair_loss_1 + self.gamma, 0.)
+                pair_loss_2 = torch.max(pair_loss_2 + self.gamma, 0.)
 
                 self.seen_back2normal_shape = True
-                raw_pair_loss = (pair_loss_1).mean()
+                raw_pair_loss = (pair_loss_1 + pair_loss_2).mean(dim=0)
                 pair_loss = self.pair_loss_weight * raw_pair_loss
 
         if with_pair_loss:
