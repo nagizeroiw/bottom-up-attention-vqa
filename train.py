@@ -136,9 +136,9 @@ def train(model, train_loader, eval_loader, args):
         total_raw_pair_loss /= train_loader.dataset.loss_len()
         train_score = 100 * train_score / train_loader.dataset.loss_len()
 
-        train_time = time.time() - t
+        train_time = time.time()
 
-        logger.write('> epoch %d, train time: %.2f' % (epoch, train_time))
+        logger.write('> epoch %d, train time: %.2f' % (epoch, train_time - t))
         logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
             (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
 
