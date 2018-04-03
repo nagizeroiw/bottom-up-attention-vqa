@@ -115,35 +115,35 @@ class BaseModel(nn.Module):
                 logits1, logits2 = logits[:, 0, :], logits[:, 1, :]  # [batch, n_ans] * 2
 
                 logits1.backward(labels2, retain_graph=True)
-                df2_1 = v_emb.grad  # [batch * 2, v_dim]
+                df2_1 = v_emb.grad.data  # [batch * 2, v_dim]
                 df2_1 = df2_1.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
                 # print('df2_1', df2_1.size())
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 logits1.backward(labels1, retain_graph=True)
-                df1_1 = v_emb.grad  # [batch * 2, v_dim]
+                df1_1 = v_emb.grad.data  # [batch * 2, v_dim]
                 df1_1 = df1_1.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
                 # print('df1_1', df1_1.size())
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 logits2.backward(labels1, retain_graph=True)
-                df1_2 = v_emb.grad  # [batch * 2, v_dim]
+                df1_2 = v_emb.grad.data  # [batch * 2, v_dim]
                 df1_2 = df1_2.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
                 # print('df1_2', df2_1.size())
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 logits2.backward(labels2, retain_graph=True)
-                df2_2 = v_emb.grad  # [batch * 2, v_dim]
+                df2_2 = v_emb.grad.data  # [batch * 2, v_dim]
                 df2_2 = df2_2.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
                 # print('df2_2', df2_1.size())
                 v_emb.grad.zero_()
                 self.zero_grad()
 
                 # ~ 1e-3
-                if random.randint(1, 100) == 1:
+                if random.randint(1, 50) == 1:
                     print('df', torch.max(df2_1).item(), torch.max(df1_1).item(), torch.max(df1_2).item(), torch.max(df2_2).item())
 
                 logits = logits.view(batch * 2, -1)  # [batch * 2, n_ans]
