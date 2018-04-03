@@ -6,6 +6,7 @@ from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
 from fc import FCNet
 from torch.autograd import Variable
+import random
 
 
 class BaseModel(nn.Module):
@@ -103,6 +104,7 @@ class BaseModel(nn.Module):
                 raw_pair_loss = (repr1 - repr2).norm(2, dim=1)
                 pair_loss = -1. * self.pair_loss_weight * raw_pair_loss  # [,]
                 pair_loss = pair_loss.mean(dim=0, keepdim=False)
+                raw_pair_loss = raw_pair_loss.mean(dim=0, keepdim=False)
 
                 self.seen_back2normal_shape = True
 
@@ -141,7 +143,8 @@ class BaseModel(nn.Module):
                 self.zero_grad()
 
                 # ~ 1e-3
-                # print(torch.max(df2_1), torch.max(df1_1), torch.max(df1_2), torch.max(df2_2))
+                if random.randint(1, 100) == 1:
+                    print('df', torch.max(df2_1).item(), torch.max(df1_1).item(), torch.max(df1_2).item(), torch.max(df2_2).item())
 
                 logits = logits.view(batch * 2, -1)  # [batch * 2, n_ans]
 
