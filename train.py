@@ -59,7 +59,7 @@ def measure(model, train_loader, eval_loader, args):
     num_epochs = args.epochs
     # load from start_with
     assert args.start_with is not None
-    saved_model = torch.load(os.path.join(args.start_with, 'model.pth'))
+    model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
 
     for epoch in range(num_epochs):
 
@@ -107,7 +107,12 @@ def train(model, train_loader, eval_loader, args):
                 q:question (b, 2, 14) -> question sentence sequence (tokenized)
                 a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
-            v = Variable(v, requires_grad=True).cuda()
+            # this significantly affects the efficiency of the training process, which should be handled.
+            # does this also affect performance???this
+            if args.pair_loss_type == 'margin':
+                v = Variable(v, requires_grad=True).cuda()
+            else:
+                v = Variable(v).cuda()
             b = Variable(b).cuda()
             q = Variable(q).cuda()
             a = Variable(a).cuda()
