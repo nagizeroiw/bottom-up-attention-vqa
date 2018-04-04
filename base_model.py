@@ -150,11 +150,8 @@ class BaseModel(nn.Module):
                 pair_loss_1 = f_2_1.sum(dim=1) / (mk1.norm(2, dim=1) + 1e-8)  # [batch,]
                 pair_loss_2 = f_1_2.sum(dim=1) / (mk2.norm(2, dim=1) + 1e-8)  # [batch,]
 
-                pair_loss_1 = pair_loss_1.clamp(-50., 50.)
-                pair_loss_2 = pair_loss_2.clamp(-50., 50.)
-
-                pair_loss_1 = torch.max(pair_loss_1 + self.gamma, other=0.)
-                pair_loss_2 = torch.max(pair_loss_2 + self.gamma, other=0.)
+                pair_loss_1 = (pair_loss_1 + self.gamma).clamp(min=0.)
+                pair_loss_2 = (pair_loss_2 + self.gamma).clamp(min=0.)
 
                 self.seen_back2normal_shape = True
                 raw_pair_loss = (pair_loss_1 + pair_loss_2).mean(dim=0)
