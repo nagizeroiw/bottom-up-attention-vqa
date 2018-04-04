@@ -17,7 +17,7 @@ except ImportError:
 
 
 def model_setting(args):
-    setting = '< [model %s][lr %f][ploss %s, %f, %f][seed %d]>' % (
+    setting = '< [%s][lr: %f][ploss: %s, %f, %f][seed: %d]>' % (
             args.output.split('/')[-1],
             args.lr,
             args.pair_loss_type,
@@ -26,6 +26,7 @@ def model_setting(args):
             args.seed
         )
     return setting
+
 
 def add_summary_value(writer, key, value, iteration):
     summary = tf.Summary(value=[tf.Summary.Value(tag=key, simple_value=value)])
@@ -118,8 +119,6 @@ def train(model, train_loader, eval_loader, args):
                 q:question (b, 2, 14) -> question sentence sequence (tokenized)
                 a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
-            # this significantly affects the efficiency of the training process, which should be handled.
-            # does this also affect performance???this
             v = Variable(v).cuda()
             b = Variable(b).cuda()
             q = Variable(q).cuda()

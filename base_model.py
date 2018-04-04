@@ -139,10 +139,10 @@ class BaseModel(nn.Module):
                 f_2_1 = logits1 * labels2 - logits1 * labels1  # [batch, n_ans]
                 f_1_2 = logits2 * labels1 - logits2 * labels2  # [batch, n_ans]
 
-                df2_1 = Variable(df2_1).cuda()
-                df1_1 = Variable(df1_1).cuda()
-                df1_2 = Variable(df1_2).cuda()
-                df2_2 = Variable(df2_2).cuda()
+                df2_1 = Variable(df2_1, requires_grad=False).cuda()
+                df1_1 = Variable(df1_1, requires_grad=False).cuda()
+                df1_2 = Variable(df1_2, requires_grad=False).cuda()
+                df2_2 = Variable(df2_2, requires_grad=False).cuda()
 
                 mk1 = df2_1 - df1_1
                 mk2 = df1_2 - df2_2
