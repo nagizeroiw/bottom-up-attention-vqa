@@ -16,6 +16,17 @@ except ImportError:
     tf = None
 
 
+def model_setting(args):
+    setting = '< [model %s][lr %f][ploss %s, %f, %f][seed %d]>' % (
+            args.output.split('/')[-1],
+            args.lr,
+            args.pair_loss_type,
+            args.pair_loss_weight,
+            args.gamma,
+            args.seed
+        )
+    return setting
+
 def add_summary_value(writer, key, value, iteration):
     summary = tf.Summary(value=[tf.Summary.Value(tag=key, simple_value=value)])
     writer.add_summary(summary, iteration)
@@ -109,10 +120,7 @@ def train(model, train_loader, eval_loader, args):
             '''
             # this significantly affects the efficiency of the training process, which should be handled.
             # does this also affect performance???this
-            if args.pair_loss_type == 'margin':
-                v = Variable(v, requires_grad=True).cuda()
-            else:
-                v = Variable(v).cuda()
+            v = Variable(v).cuda()
             b = Variable(b).cuda()
             q = Variable(q).cuda()
             a = Variable(a).cuda()
@@ -146,6 +154,7 @@ def train(model, train_loader, eval_loader, args):
         train_time = time.time()
 
         logger.write('> epoch %d, train time: %.2f' % (epoch, train_time - t))
+        logger.write(model_setting(args))
         logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
             (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
 
