@@ -140,7 +140,10 @@ def train(model, train_loader, eval_loader, args):
                 total_pair_loss += pair_loss.item() * v.size(0) * 2
                 total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
                 # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))
-            train_score += batch_score
+            try:
+                train_score += batch_score.item()
+            except:
+                train_score += batch_score
             bar.update(i)
 
         bar.finish()
