@@ -63,7 +63,10 @@ def compute_score_with_logits(logits, labels):
     one_hots = torch.zeros(*labels.size()).cuda()
     one_hots.scatter_(1, logits.view(-1, 1), 1)
     scores = (one_hots * labels)
-    return scores
+    if type(scores) == type(0.6):
+        return scores
+    else:
+        return scores.item()
 
 
 def measure(model, train_loader, eval_loader, args):
