@@ -63,10 +63,7 @@ def compute_score_with_logits(logits, labels):
     one_hots = torch.zeros(*labels.size()).cuda()
     one_hots.scatter_(1, logits.view(-1, 1), 1)
     scores = (one_hots * labels)
-    if type(scores) == type(0.6):
-        return scores
-    else:
-        return scores.item()
+    return scores
 
 
 def measure(model, train_loader, eval_loader, args):
@@ -200,7 +197,10 @@ def evaluate(model, dataloader):
             a = Variable(a).cuda()
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             batch_score = compute_score_with_logits(pred, a).sum()
-            score += batch_score
+            try:
+                score += batch_score.item()
+            except:
+                score += batch_score
             num_data += pred.size(0)
             if pair_loss is not None:
                 total_pair_loss += pair_loss.item() * v.size(0) * 2
