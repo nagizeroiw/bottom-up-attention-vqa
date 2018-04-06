@@ -1,4 +1,4 @@
-ID=pair_loss_3
+ID=pair_wise_test
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=1 python main.py \
     --output saved_models/$ID \
