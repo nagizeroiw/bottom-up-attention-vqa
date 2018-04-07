@@ -1,8 +1,8 @@
-ID=pair_loss_3_g0.5
+ID=pair_loss_4_g2.0
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=2 python main.py \
     --output saved_models/$ID \
     --epochs 40 \
     --pair_loss_weight 0.05 \
-    --pair_loss_type margin \
-    --gamma 0.5
+    --pair_loss_type margin@repr \
+    --gamma 2.0

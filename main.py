@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
     parser.add_argument('--grad_clip_rate', type=float, default=0.25, help='grad clip threshold')
 
-    parser.add_argument('--pair_loss_type', type=str, default='margin', help='@att, @repr, margin')
+    parser.add_argument('--pair_loss_type', type=str, default='margin@repr', help='@att, @repr, margin@att, margin@repr')
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     parser.add_argument('--gamma', type=float, default=2.5, help='margin threshold gamma for pair_loss_margin')
     parser.add_argument('--use_pair', type=bool, default=True, help='whether use pair-wise batch feeding')
