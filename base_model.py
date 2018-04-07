@@ -21,6 +21,7 @@ class BaseModel(nn.Module):
         self.pair_loss_weight = args.pair_loss_weight
         self.pair_loss_type = args.pair_loss_type
         self.gamma = args.gamma
+        self.num_hid = args.num_hid
 
         self.seen_back2normal_shape = False
 
@@ -67,7 +68,6 @@ class BaseModel(nn.Module):
 
         q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
         v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
-        num_hid = v_repr.size()[-1]
         joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
@@ -111,7 +111,7 @@ class BaseModel(nn.Module):
                 if self.pair_loss_type == 'margin@att':
                     df_size = obj_dim
                 elif self.pair_loss_type == 'margin@repr':
-                    df_size = int(num_hid)
+                    df_size = self.num_hid
 
                 df2_1 = torch.FloatTensor(batch, df_size)
                 df1_1 = torch.FloatTensor(batch, df_size)
