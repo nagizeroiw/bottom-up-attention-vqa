@@ -112,35 +112,50 @@ class BaseModel(nn.Module):
                 df1_2 = torch.FloatTensor(batch, obj_dim)
                 df2_2 = torch.FloatTensor(batch, obj_dim)
 
-                def get_place():
-                    global v_emb
-                    global v_repr
-                    if self.pair_loss_type == 'margin@att':
-                        return v_emb
-                    elif self.pair_loss_type == 'margin@repr':
-                        return v_repr
+                if self.pair_loss_type == 'margin@att':
+                    v_emb.retain_grad()
 
-                get_place().retain_grad()
+                    logits1.backward(labels2, retain_graph=True)
+                    df2_1[:, :] = v_emb.grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
+                    v_emb.grad.zero_()
+                    self.zero_grad()
 
-                logits1.backward(labels2, retain_graph=True)
-                df2_1[:, :] = get_place().grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
-                get_place().grad.zero_()
-                self.zero_grad()
+                    logits1.backward(labels1, retain_graph=True)
+                    df1_1[:, :] = v_emb.grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
+                    v_emb.grad.zero_()
+                    self.zero_grad()
 
-                logits1.backward(labels1, retain_graph=True)
-                df1_1[:, :] = get_place().grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
-                get_place().grad.zero_()
-                self.zero_grad()
+                    logits2.backward(labels1, retain_graph=True)
+                    df1_2[:, :] = v_emb.grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
+                    v_emb.grad.zero_()
+                    self.zero_grad()
 
-                logits2.backward(labels1, retain_graph=True)
-                df1_2[:, :] = get_place().grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
-                get_place().grad.zero_()
-                self.zero_grad()
+                    logits2.backward(labels2, retain_graph=True)
+                    df2_2[:, :] = v_emb.grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
+                    v_emb.grad.zero_()
+                    self.zero_grad()
+                elif self.pair_loss_type == 'margin@repr':
+                    v_repr.retain_grad()
 
-                logits2.backward(labels2, retain_graph=True)
-                df2_2[:, :] = get_place().grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
-                get_place().grad.zero_()
-                self.zero_grad()
+                    logits1.backward(labels2, retain_graph=True)
+                    df2_1[:, :] = v_repr.grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
+                    v_repr.grad.zero_()
+                    self.zero_grad()
+
+                    logits1.backward(labels1, retain_graph=True)
+                    df1_1[:, :] = v_repr.grad.view(batch, 2, -1)[:, 0, :]  # [batch, v_dim]
+                    v_repr.grad.zero_()
+                    self.zero_grad()
+
+                    logits2.backward(labels1, retain_graph=True)
+                    df1_2[:, :] = v_repr.grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
+                    v_repr.grad.zero_()
+                    self.zero_grad()
+
+                    logits2.backward(labels2, retain_graph=True)
+                    df2_2[:, :] = v_repr.grad.view(batch, 2, -1)[:, 1, :]  # [batch, v_dim]
+                    v_repr.grad.zero_()
+                    self.zero_grad()
 
                 logits = logits.view(batch * 2, -1)  # [batch * 2, n_ans]
 
