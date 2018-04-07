@@ -67,7 +67,7 @@ class BaseModel(nn.Module):
 
         q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
         v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
-        num_hid = v_repr.size()[:-1]
+        num_hid = v_repr.size()[-1]
         joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
