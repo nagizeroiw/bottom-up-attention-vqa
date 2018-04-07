@@ -111,7 +111,7 @@ class BaseModel(nn.Module):
                 if self.pair_loss_type == 'margin@att':
                     df_size = obj_dim
                 elif self.pair_loss_type == 'margin@repr':
-                    df_size = num_hid
+                    df_size = int(num_hid)
 
                 df2_1 = torch.FloatTensor(batch, df_size)
                 df1_1 = torch.FloatTensor(batch, df_size)
