@@ -67,6 +67,7 @@ class BaseModel(nn.Module):
 
         q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
         v_repr = self.v_net(v_emb)  # image representation [2 * batch, num_hid]
+        num_hid = v_repr.size()[:-1]
         joint_repr = q_repr * v_repr  # joint embedding (joint representation) [2 * batch, num_hid]
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
@@ -107,10 +108,15 @@ class BaseModel(nn.Module):
                 logits = logits.view(batch, 2, -1)  # [batch, 2, n_ans]
                 logits1, logits2 = logits[:, 0, :], logits[:, 1, :]  # [batch, n_ans] * 2
 
-                df2_1 = torch.FloatTensor(batch, obj_dim)
-                df1_1 = torch.FloatTensor(batch, obj_dim)
-                df1_2 = torch.FloatTensor(batch, obj_dim)
-                df2_2 = torch.FloatTensor(batch, obj_dim)
+                if self.pair_loss_type == 'margin@att':
+                    df_size = obj_dim
+                elif self.pair_loss_type == 'margin@repr':
+                    df_size = num_hid
+
+                df2_1 = torch.FloatTensor(batch, df_size)
+                df1_1 = torch.FloatTensor(batch, df_size)
+                df1_2 = torch.FloatTensor(batch, df_size)
+                df2_2 = torch.FloatTensor(batch, df_size)
 
                 if self.pair_loss_type == 'margin@att':
                     v_emb.retain_grad()
