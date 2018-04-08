@@ -5,4 +5,4 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --epochs 40 \
     --pair_loss_weight 0.05 \
     --pair_loss_type margin@repr \
-    --gamma 2.5
+    --gamma 3
