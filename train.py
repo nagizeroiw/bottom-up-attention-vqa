@@ -36,7 +36,7 @@ def add_summary_value(writer, key, value, iteration):
 def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None):
     assert logits.dim() == 2
     if labels.dim() == 3:  # handle data with pair
-        _, batch_size, n_answers = labels.size()
+        batch_size, _, n_answers = labels.size()
         labels = labels.view(-1, n_answers)
 
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
@@ -56,7 +56,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None)
 def compute_score_with_logits(logits, labels):
 
     if labels.dim() == 3:  # handle data with pair
-        _, batch_size, n_answers = labels.size()
+        batch_size, _, n_answers = labels.size()
         labels = labels.view(-1, n_answers)
 
     logits = torch.max(logits, 1)[1].data # argmax
