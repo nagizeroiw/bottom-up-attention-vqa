@@ -95,7 +95,7 @@ def train(model, train_loader, eval_loader, args):
     lr = args.lr
 
     utils.create_dir(output)
-    optim = torch.optim.Adam(model.parameters(), lr=lr)
+    optim = torch.optim.Adamax(model.parameters(), lr=lr)
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_score = 0
 
