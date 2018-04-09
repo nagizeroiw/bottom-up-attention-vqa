@@ -132,7 +132,7 @@ def train(model, train_loader, eval_loader, args):
             nn.utils.clip_grad_norm(model.parameters(), args.grad_clip_rate)
             optim.step()
 
-            batch_score = compute_score_with_logits(pred, a.data).sum()
+            batch_score = compute_score_with_logits(pred, a).sum()
             if v.dim() == 3:
                 total_loss += loss.item() * v.size(0)
             else:  # v.dim() == 4
