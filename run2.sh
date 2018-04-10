@@ -1,4 +1,4 @@
-ID=test_pair_loss_4_lr0.005
+ID=test_pair_loss_4_cl0.5
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=2 python main.py \
     --output saved_models/$ID \
@@ -6,4 +6,5 @@ CUDA_VISIBLE_DEVICES=2 python main.py \
     --pair_loss_weight 0 \
     --pair_loss_type margin@repr \
     --gamma 2.5 \
-    --lr 0.005
+    --lr 0.003 \
+    --grad_clip_rate 0.5
