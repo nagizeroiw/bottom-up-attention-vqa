@@ -212,3 +212,36 @@ def build_baseline0_newatt(dataset, num_hid, args):
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
     return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+
+
+def build_2direction(dataset, num_hid, args):
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.5)
+    q_emb = QuestionEmbedding(300, num_hid, 1, True, 0.5)
+    v_att = NewAttention(dataset.v_dim, 2 * q_emb.num_hid, num_hid)
+    q_net = FCNet([2 * q_emb.num_hid, num_hid])
+    v_net = FCNet([dataset.v_dim, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
+    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+
+
+def build_bigword(dataset, num_hid, args):
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 512, 0.5)
+    q_emb = QuestionEmbedding(512, num_hid, 1, False, 0.5)
+    v_att = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid)
+    q_net = FCNet([q_emb.num_hid, num_hid])
+    v_net = FCNet([dataset.v_dim, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
+    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+
+
+def build_2layer(dataset, num_hid, args):
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.5)
+    q_emb = QuestionEmbedding(300, num_hid, 2, False, 0.5)
+    v_att = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid)
+    q_net = FCNet([q_emb.num_hid, num_hid])
+    v_net = FCNet([dataset.v_dim, num_hid])
+    classifier = SimpleClassifier(
+        num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
+    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
