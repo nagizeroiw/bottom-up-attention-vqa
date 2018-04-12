@@ -1,13 +1,13 @@
 from __future__ import print_function
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from attention import Attention, NewAttention
 from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
 from fc import FCNet
 from torch.autograd import Variable
 import random
-
 
 class BaseModel(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, args):
