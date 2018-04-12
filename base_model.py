@@ -1,13 +1,13 @@
 from __future__ import print_function
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from attention import Attention, NewAttention
 from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
 from fc import FCNet
 from torch.autograd import Variable
 import random
-
 
 class BaseModel(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, args):
@@ -153,8 +153,8 @@ class BaseModel(nn.Module):
                 pair_loss_1 = pair_loss_1.clamp(-50., 50.)
                 pair_loss_2 = pair_loss_2.clamp(-50., 50.)
 
-                pair_loss_1 = torch.max(pair_loss_1 + self.gamma, other=0.)
-                pair_loss_2 = torch.max(pair_loss_2 + self.gamma, other=0.)
+                pair_loss_1 = F.relu(pair_loss_1 + self.gamma)
+                pair_loss_2 = F.relu(pair_loss_2 + self.gamma)
 
                 self.seen_back2normal_shape = True
                 raw_pair_loss = (pair_loss_1 + pair_loss_2).mean(dim=0)
