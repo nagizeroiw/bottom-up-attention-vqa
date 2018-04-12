@@ -112,6 +112,8 @@ class BaseModel(nn.Module):
                     df_size = obj_dim
                 elif self.pair_loss_type == 'margin@repr':
                     df_size = self.num_hid
+                elif self.pair_loss_type == 'margin@jrepr':
+                    df_size = self.num_hid
 
                 df2_1 = torch.FloatTensor(batch, df_size)
                 df1_1 = torch.FloatTensor(batch, df_size)
