@@ -120,6 +120,11 @@ class BaseModel(nn.Module):
                 df1_2 = torch.FloatTensor(batch, df_size)
                 df2_2 = torch.FloatTensor(batch, df_size)
 
+                df2_1 = Variable(df2_1, requires_grad=False).cuda()
+                df1_1 = Variable(df1_1, requires_grad=False).cuda()
+                df1_2 = Variable(df1_2, requires_grad=False).cuda()
+                df2_2 = Variable(df2_2, requires_grad=False).cuda()
+
                 if self.pair_loss_type == 'margin@att':
                     v_emb.retain_grad()
 
@@ -192,11 +197,6 @@ class BaseModel(nn.Module):
                 ##### computing pair loss
                 f_2_1 = logits1 * labels2 - logits1 * labels1  # [batch, n_ans]
                 f_1_2 = logits2 * labels1 - logits2 * labels2  # [batch, n_ans]
-
-                df2_1 = Variable(df2_1, requires_grad=False).cuda()
-                df1_1 = Variable(df1_1, requires_grad=False).cuda()
-                df1_2 = Variable(df1_2, requires_grad=False).cuda()
-                df2_2 = Variable(df2_2, requires_grad=False).cuda()
 
                 mk1 = df2_1 - df1_1
                 mk2 = df1_2 - df2_2
