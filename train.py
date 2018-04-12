@@ -16,6 +16,18 @@ except ImportError:
     tf = None
 
 
+def model_setting(args):
+    setting = '< [%s][lr: %f][ploss: %s, %f, %f][seed: %d]>' % (
+            args.output.split('/')[-1],
+            args.lr,
+            args.pair_loss_type,
+            args.pair_loss_weight,
+            args.gamma,
+            args.seed
+        )
+    return setting
+
+
 def add_summary_value(writer, key, value, iteration):
     summary = tf.Summary(value=[tf.Summary.Value(tag=key, simple_value=value)])
     writer.add_summary(summary, iteration)
@@ -24,7 +36,7 @@ def add_summary_value(writer, key, value, iteration):
 def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None):
     assert logits.dim() == 2
     if labels.dim() == 3:  # handle data with pair
-        _, batch_size, n_answers = labels.size()
+        batch_size, _, n_answers = labels.size()
         labels = labels.view(-1, n_answers)
 
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
@@ -44,7 +56,7 @@ def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None)
 def compute_score_with_logits(logits, labels):
 
     if labels.dim() == 3:  # handle data with pair
-        _, batch_size, n_answers = labels.size()
+        batch_size, _, n_answers = labels.size()
         labels = labels.view(-1, n_answers)
 
     logits = torch.max(logits, 1)[1].data # argmax
@@ -107,12 +119,7 @@ def train(model, train_loader, eval_loader, args):
                 q:question (b, 2, 14) -> question sentence sequence (tokenized)
                 a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
-            # this significantly affects the efficiency of the training process, which should be handled.
-            # does this also affect performance???this
-            if args.pair_loss_type == 'margin':
-                v = Variable(v, requires_grad=True).cuda()
-            else:
-                v = Variable(v).cuda()
+            v = Variable(v).cuda()
             b = Variable(b).cuda()
             q = Variable(q).cuda()
             a = Variable(a).cuda()
@@ -125,7 +132,7 @@ def train(model, train_loader, eval_loader, args):
             nn.utils.clip_grad_norm(model.parameters(), args.grad_clip_rate)
             optim.step()
 
-            batch_score = compute_score_with_logits(pred, a.data).sum()
+            batch_score = compute_score_with_logits(pred, a).sum()
             if v.dim() == 3:
                 total_loss += loss.item() * v.size(0)
             else:  # v.dim() == 4
@@ -133,7 +140,10 @@ def train(model, train_loader, eval_loader, args):
                 total_pair_loss += pair_loss.item() * v.size(0) * 2
                 total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
                 # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))
-            train_score += batch_score
+            try:
+                train_score += batch_score.item()
+            except:
+                train_score += batch_score
             bar.update(i)
 
         bar.finish()
@@ -146,6 +156,7 @@ def train(model, train_loader, eval_loader, args):
         train_time = time.time()
 
         logger.write('> epoch %d, train time: %.2f' % (epoch, train_time - t))
+        logger.write(model_setting(args))
         logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
             (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
 
@@ -186,7 +197,10 @@ def evaluate(model, dataloader):
             a = Variable(a).cuda()
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             batch_score = compute_score_with_logits(pred, a).sum()
-            score += batch_score
+            try:
+                score += batch_score.item()
+            except:
+                score += batch_score
             num_data += pred.size(0)
             if pair_loss is not None:
                 total_pair_loss += pair_loss.item() * v.size(0) * 2

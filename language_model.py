@@ -39,7 +39,7 @@ class QuestionEmbedding(nn.Module):
         self.rnn = rnn_cls(
             in_dim, num_hid, nlayers,
             bidirectional=bidirect,
-            dropout=0,
+            dropout=dropout,
             batch_first=True)
 
         self.dropout = nn.Dropout(dropout)
