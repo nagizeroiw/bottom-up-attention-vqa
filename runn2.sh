@@ -1,6 +1,6 @@
-ID=pair_loss_4_g2.5_new
+ID=pair_loss_4_g2.5
 rm -r saved_models/$ID
-CUDA_VISIBLE_DEVICES=1 python main.py \
+CUDA_VISIBLE_DEVICES=2 python main.py \
     --output saved_models/$ID \
     --epochs 40 \
     --pair_loss_weight 0.05 \
