@@ -61,7 +61,8 @@ class QuestionEmbedding(nn.Module):
 
     def forward(self, x):
         # x: [batch, sequence, in_dim]
-        x = self.dropout(x)
+        
+        # x = self.dropout(x)
         batch = x.size(0)
         hidden = self.init_hidden(batch)
         self.rnn.flatten_parameters()
