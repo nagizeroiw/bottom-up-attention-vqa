@@ -42,7 +42,6 @@ class QuestionEmbedding(nn.Module):
             dropout=dropout,
             batch_first=True)
 
-        self.dropout = nn.Dropout(dropout)
         self.in_dim = in_dim
         self.num_hid = num_hid
         self.nlayers = nlayers
