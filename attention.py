@@ -60,7 +60,7 @@ class NewAttention(nn.Module):
 
 class DualAttention(nn.Module):
     def __init__(self, v_dim, q_dim, num_hid, dropout=0.2):
-        super(NewAttention, self).__init__()
+        super(DualAttention, self).__init__()
 
         self.v_proj1 = FCNet([v_dim, num_hid])
         self.v_proj2 = FCNet([v_dim, num_hid])
