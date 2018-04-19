@@ -56,3 +56,46 @@ class NewAttention(nn.Module):
         joint_repr = self.dropout(joint_repr)
         logits = self.linear(joint_repr)
         return logits
+
+
+class DualAttention(nn.Module):
+    def __init__(self, v_dim, q_dim, num_hid, dropout=0.2):
+        super(NewAttention, self).__init__()
+
+        self.v_proj1 = FCNet([v_dim, num_hid])
+        self.v_proj2 = FCNet([v_dim, num_hid])
+        self.q_proj1 = FCNet([q_dim, num_hid])
+        self.q_proj2 = FCNet([q_dim, num_hid])
+        self.dropout = nn.Dropout(dropout)
+        self.linear1 = weight_norm(nn.Linear(q_dim, 1), dim=None)
+        self.linear2 = weight_norm(nn.Linear(q_dim, 1), dim=None)
+
+    def forward(self, v, q):
+        """
+        v: [batch, k, vdim]
+        q: [batch, qdim]
+        """
+        logits1, logits2 = self.logits(v, q)
+        w1 = nn.functional.softmax(logits1, dim=1)
+        w2 = nn.functional.softmax(logits2, dim=1)
+        return w1 + w2
+
+    def logits(self, v, q):
+        batch, k, _ = v.size()
+
+        #################### tanh
+        v_proj1 = self.v_proj1(v) # [batch, k, qdim]
+        q_proj1 = self.q_proj1(q).unsqueeze(1).repeat(1, k, 1)
+
+        v_proj2 = self.v_proj2(v)
+        q_proj2 = self.q_proj2(q).unsqueeze(1).repeat(1, k, 1)
+
+        joint_repr1 = v_proj1 * q_proj1  # was cat[v, q]
+        joint_repr1 = self.dropout(joint_repr1)
+
+        joint_repr2 = v_proj2 * q_proj2  # was cat[v, q]
+        joint_repr2 = self.dropout(joint_repr2)
+
+        logits1 = self.linear1(joint_repr1)
+        logits2 = self.linear2(joint_repr2)
+        return logits1, logits2
