@@ -66,7 +66,8 @@ class DualAttention(nn.Module):
         self.v_proj2 = FCNet([v_dim, num_hid])
         self.q_proj1 = FCNet([q_dim, num_hid])
         self.q_proj2 = FCNet([q_dim, num_hid])
-        self.dropout = nn.Dropout(dropout)
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
         self.linear1 = weight_norm(nn.Linear(q_dim, 1), dim=None)
         self.linear2 = weight_norm(nn.Linear(q_dim, 1), dim=None)
 
@@ -91,10 +92,10 @@ class DualAttention(nn.Module):
         q_proj2 = self.q_proj2(q).unsqueeze(1).repeat(1, k, 1)
 
         joint_repr1 = v_proj1 * q_proj1  # was cat[v, q]
-        joint_repr1 = self.dropout(joint_repr1)
+        joint_repr1 = self.dropout1(joint_repr1)
 
         joint_repr2 = v_proj2 * q_proj2  # was cat[v, q]
-        joint_repr2 = self.dropout(joint_repr2)
+        joint_repr2 = self.dropout2(joint_repr2)
 
         logits1 = self.linear1(joint_repr1)
         logits2 = self.linear2(joint_repr2)
