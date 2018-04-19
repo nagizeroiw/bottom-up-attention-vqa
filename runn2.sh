@@ -6,4 +6,4 @@ CUDA_VISIBLE_DEVICES=2 python main.py \
     --pair_loss_weight 0.05 \
     --pair_loss_type margin@repr \
     --gamma 2.5 \
-    --seed 1246
+    --seed 5293
