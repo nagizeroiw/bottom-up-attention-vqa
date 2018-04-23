@@ -1,4 +1,4 @@
-ID=dualatt_ploss3
+ID=dualatt_leaky
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=1 python main.py \
     --output saved_models/$ID \

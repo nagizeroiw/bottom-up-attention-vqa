@@ -35,6 +35,7 @@ class NewAttention(nn.Module):
         self.v_proj = FCNet([v_dim, num_hid])
         self.q_proj = FCNet([q_dim, num_hid])
         self.dropout = nn.Dropout(dropout)
+        self.on_repr= FCNet([num_hid, num_hid])
         self.linear = weight_norm(nn.Linear(num_hid, 1), dim=None)
 
     def forward(self, v, q):
@@ -51,9 +52,14 @@ class NewAttention(nn.Module):
 
         #################### tanh
         v_proj = self.v_proj(v) # [batch, k, qdim]
+        v_proj = self.dropout(v_proj)
         q_proj = self.q_proj(q).unsqueeze(1).repeat(1, k, 1)
+        q_proj = self.q_proj(q_proj)
+
         joint_repr = v_proj * q_proj  # was cat[v, q]
         joint_repr = self.dropout(joint_repr)
+        joint_repr = self.on_repr(joint_repr)
+        
         logits = self.linear(joint_repr)
         return logits
 

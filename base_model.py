@@ -74,8 +74,12 @@ class BaseModel(nn.Module):
 
         if with_pair_loss:
 
+            ### no pair_loss (but use pair-wise training)
+            if self.pair_loss_type == 'none':
+                with_pair_loss = False
+
             ### pair_loss_2 (@attended image feature)
-            if self.pair_loss_type == '@att':
+            elif self.pair_loss_type == '@att':
                 v_emb = v_emb.view(batch, 2, -1)  # [batch, 2, obj_dim]
                 v_emb = v_emb.transpose(1, 2)  # [batch, obj_dim, 2]
                 emb1, emb2 = v_emb[:, :, 0], v_emb[:, :, 1]  # [batch, obj_dim] * 2

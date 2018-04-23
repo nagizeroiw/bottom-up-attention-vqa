@@ -133,7 +133,7 @@ def train(model, train_loader, eval_loader, args):
             optim.step()
 
             batch_score = compute_score_with_logits(pred, a).sum()
-            if v.dim() == 3:
+            if pair_loss is None:
                 total_loss += loss.data[0] * v.size(0)
             else:  # v.dim() == 4
                 total_loss += loss.data[0] * v.size(0) * 2
