@@ -243,6 +243,9 @@ def build_baseline0_newatt(dataset, num_hid, args):
 
 
 def build_dualatt(dataset, num_hid, args):
+
+    initializer = nn.init.kaiming_normal
+
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.4)
     v_att = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
@@ -250,5 +253,8 @@ def build_dualatt(dataset, num_hid, args):
     v_net = FCNet([dataset.v_dim, num_hid])
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
-    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+
+    model = BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+    model.apply(initializer)
+    return model
 

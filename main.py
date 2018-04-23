@@ -57,8 +57,11 @@ if __name__ == '__main__':
     model.w_emb.init_embedding('data/glove6b_init_300d.npy')
 
     model = nn.DataParallel(model).cuda()
-
-    train_loader = DataLoader(train_dset, batch_size / 2, shuffle=True, num_workers=1)
+    if args.use_pair:
+        train_batch = batch_size / 2
+    else:
+        train_batch = batch_size
+    train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
     if args.task == 'train':
         train(model, train_loader, eval_loader, args)
