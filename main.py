@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--lr', type=float, default=0.003, help='learning rate')
     parser.add_argument('--grad_clip_rate', type=float, default=0.5, help='grad clip threshold')
-    parser.add_argument('--rnn_layser', type=int, default=1, help='number of rnn layers')
+    parser.add_argument('--rnn_layer', type=int, default=1, help='number of rnn layers')
 
     parser.add_argument('--pair_loss_type', type=str, default='margin@repr', help='@att, @repr, margin@att, margin@repr')
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
