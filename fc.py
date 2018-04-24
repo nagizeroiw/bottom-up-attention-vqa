@@ -14,9 +14,9 @@ class FCNet(nn.Module):
             in_dim = dims[i]
             out_dim = dims[i+1]
             layers.append(weight_norm(nn.Linear(in_dim, out_dim), dim=None))
-            layers.append(nn.LeakyReLU())
+            layers.append(nn.ReLU())
         layers.append(weight_norm(nn.Linear(dims[-2], dims[-1]), dim=None))
-        layers.append(nn.LeakyReLU())
+        layers.append(nn.ReLU())
 
         self.main = nn.Sequential(*layers)
 
