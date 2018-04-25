@@ -46,8 +46,10 @@ if __name__ == '__main__':
 
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
     if args.use_pair:
+        print('! use_pair True')
         train_dset = VQAFeatureDatasetWithPair('train', dictionary)
     else:
+        print('! use_pair False')
         train_dset = VQAFeatureDataset('train', dictionary, filter_pair=args.filter_pair)
     eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=args.filter_pair)
     batch_size = args.batch_size
