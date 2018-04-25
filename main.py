@@ -29,11 +29,14 @@ def parse_args():
     parser.add_argument('--pair_loss_type', type=str, default='margin@repr', help='@att, @repr, margin@att, margin@repr')
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     parser.add_argument('--gamma', type=float, default=2.5, help='margin threshold gamma for pair_loss_margin')
+
     parser.add_argument('--use_pair', dest='use_pair', action='store_true', help='whether use pair-wise batch feeding')
     parser.add_argument('--no-use_pair', dest='use_pair', action='store_false', help='whether use pair-wise batch feeding')
     parser.add_argument('--filter_pair', dest='filter_pair', action='store_true', help='whether filter out non-complementary questions')
     parser.add_argument('--no-filter_pair', dest='filter_pair', action='store_false', help='whether filter out non-complementary questions')
-    
+
+    parser.set_defaults(use_pair=True)
+    parser.set_defaults(filter_pair=True)    
     args = parser.parse_args()
     return args
 
