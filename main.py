@@ -37,6 +37,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    print(args)
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
