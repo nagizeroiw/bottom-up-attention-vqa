@@ -113,6 +113,7 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
 class VQAFeatureDataset(Dataset):
     def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
+        print('!filter_pair', filter_pair)
         super(VQAFeatureDataset, self).__init__()
         assert name in ['train', 'val']
 

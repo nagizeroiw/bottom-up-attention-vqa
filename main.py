@@ -49,7 +49,7 @@ if __name__ == '__main__':
         train_dset = VQAFeatureDatasetWithPair('train', dictionary)
     else:
         train_dset = VQAFeatureDataset('train', dictionary, filter_pair=args.filter_pair)
-    eval_dset = VQAFeatureDataset('val', dictionary)
+    eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=args.filter_pair)
     batch_size = args.batch_size
 
     print '> data loaded. time: %.2fs' % (time.time() - start)
