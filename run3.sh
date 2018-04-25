@@ -6,4 +6,5 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --pair_loss_weight 0 \
     --pair_loss_type @att \
     --gamma 2.5 \
-    --model dualatt
+    --model dualatt \
+    --rnn_layer 2

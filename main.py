@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     parser.add_argument('--gamma', type=float, default=2.5, help='margin threshold gamma for pair_loss_margin')
     parser.add_argument('--use_pair', type=bool, default=True, help='whether use pair-wise batch feeding')
+    parser.add_argument('--filter_pair', type=bool, default=True, help='whether filter out non-complementary questions')
     args = parser.parse_args()
     return args
 
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     if args.use_pair:
         train_dset = VQAFeatureDatasetWithPair('train', dictionary)
     else:
-        train_dset = VQAFeatureDataset('train', dictionary)
+        train_dset = VQAFeatureDataset('train', dictionary, args.filter_pair)
     eval_dset = VQAFeatureDataset('val', dictionary)
     batch_size = args.batch_size
 

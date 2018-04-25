@@ -1,4 +1,4 @@
-ID=dualatt_1280
+ID=dualatt_all
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=2 python main.py \
     --output saved_models/$ID \
@@ -7,4 +7,5 @@ CUDA_VISIBLE_DEVICES=2 python main.py \
     --pair_loss_type @att \
     --gamma 2.5 \
     --model dualatt \
-    --num_hid 1280
+    --use_pair False \
+    --filter_pair False

@@ -112,7 +112,7 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
 
 class VQAFeatureDataset(Dataset):
-    def __init__(self, name, dictionary, dataroot='data'):
+    def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
         super(VQAFeatureDataset, self).__init__()
         assert name in ['train', 'val']
 
@@ -150,7 +150,11 @@ class VQAFeatureDataset(Dataset):
         # train (82783, 36, 2048), val (40504, 36, 2048)
         print('> spatials.shape', self.spatials.shape)
         # train (82783, 36, 6), val (40504, 36, 6)
-
+        if filter_pair is True:
+            print('> only load questions that are included in complementary pairs list.')
+        else:
+            print('> load all questions.')
+            cpair_qids = None
         self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
