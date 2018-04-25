@@ -6,5 +6,5 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --pair_loss_weight 0 \
     --pair_loss_type @att \
     --gamma 2.5 \
-    --use_pair False \
+    --no-use_pair \
     --model dualatt
