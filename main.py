@@ -48,7 +48,7 @@ if __name__ == '__main__':
     if args.use_pair:
         train_dset = VQAFeatureDatasetWithPair('train', dictionary)
     else:
-        train_dset = VQAFeatureDataset('train', dictionary, args.filter_pair)
+        train_dset = VQAFeatureDataset('train', dictionary, dataroot='data', filter_pair=args.filter_pair)
     eval_dset = VQAFeatureDataset('val', dictionary)
     batch_size = args.batch_size
 
