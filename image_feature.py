@@ -63,7 +63,8 @@ def get_all_images():
     id2file = get_images('train')
     id2file.update(get_images('valid'))
     id2file.update(get_images('test'))
-    cPickle.dump(id2file, open(os.path.join(DATAROOT), 'id2file.pkl'), 'w')
+    print(len(id2file))
+    cPickle.dump(id2file, open(os.path.join(DATAROOT, 'id2file.pkl'), 'w'))
 
 
 if __name__ == '__main__':
