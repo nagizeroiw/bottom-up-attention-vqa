@@ -7,7 +7,7 @@ class SimpleClassifier(nn.Module):
         super(SimpleClassifier, self).__init__()
         layers = [
             weight_norm(nn.Linear(in_dim, hid_dim), dim=None),
-            nn.LeakyReLU(),
+            nn.ReLU(),
             nn.Dropout(dropout, inplace=True),
             weight_norm(nn.Linear(hid_dim, out_dim), dim=None)
         ]

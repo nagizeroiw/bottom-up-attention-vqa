@@ -1,7 +1,10 @@
-ID=dualatt_no_pair
+ID=dualatt_2layer
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=3 python main.py \
     --output saved_models/$ID \
     --epochs 40 \
-    --use_pair False \
-    --model dualatt
+    --pair_loss_weight 0 \
+    --pair_loss_type @att \
+    --gamma 2.5 \
+    --model dualatt \
+    --rnn_layer 2

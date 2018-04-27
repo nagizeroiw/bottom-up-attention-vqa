@@ -44,10 +44,9 @@ def instance_bce_with_logits(logits, labels, pair_loss=None, raw_pair_loss=None)
 
     if pair_loss is not None:
 
-        if random.randint(1, 100) == 1:
-            print(loss.data[0], pair_loss.data[0], raw_pair_loss.data[0])
+        # if random.randint(1, 100) == 1:
+        #     print(loss.data[0], pair_loss.data[0], raw_pair_loss.data[0])
 
-            # print(type(loss), type(pair_loss))
         loss += pair_loss
 
     return loss
@@ -157,6 +156,7 @@ def train(model, train_loader, eval_loader, args):
 
         logger.write('> epoch %d, train time: %.2f' % (epoch, train_time - t))
         logger.write(model_setting(args))
+        logger.write(str(args))
         logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
             (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
 
@@ -167,6 +167,7 @@ def train(model, train_loader, eval_loader, args):
         logger.write('> validation time: %.2f' % (time.time() - train_time))
         logger.write('\tvalid score: %.2f, valid_pair_loss: %.7f, valid_raw_pair_loss: %.7f' % \
             (100 * eval_score, eval_pair_loss, eval_raw_pair_loss))
+
 
         add_summary_value(tf_writer, 'loss', total_loss, epoch)
         add_summary_value(tf_writer, 'train_score', train_score, epoch)
