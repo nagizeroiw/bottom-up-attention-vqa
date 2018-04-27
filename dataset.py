@@ -274,3 +274,114 @@ class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
     def loss_len(self):
         return 2. * len(self.pairs)
+
+class VQAFeatureDatasetEnd2End(Dataset):
+    def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
+        print('!filter_pair', filter_pair)
+        super(VQAFeatureDataset, self).__init__()
+        assert name in ['train', 'val']
+
+        ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
+        label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
+        self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
+        self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
+        self.num_ans_candidates = len(self.ans2label)
+        print('> num_ans_candidates:', self.num_ans_candidates)
+
+        self.dictionary = dictionary
+
+        print('> loading complementary pairs file')
+        self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+        # train 200394 pairs, valid 95144 pairs
+        # train 443757 questions, valid 214354 questions
+
+        cpair_qids = set()
+        for qid1, qid2 in self.pairs:
+            cpair_qids.add(qid1)
+            cpair_qids.add(qid2)
+        print('complementary pairs list covers %d questions.' % len(cpair_qids))
+
+        if filter_pair is True:
+            print('> only load questions that are included in complementary pairs list.')
+        else:
+            print('> load all questions.')
+            cpair_qids = None
+
+        self.img_id2name = cPickle.load(open(os.path.join(dataroot, 'images', 'id2file.pkl')))
+
+        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2name, cpair_qids)
+        print('> self.entries loaded %d questions.' % len(self.entries))
+
+        self.tokenize()
+        self.tensorize()
+        print('> features and labels loaded.')
+
+        self.seen_pshape = False
+
+    def tokenize(self, max_length=14):
+        """Tokenizes the questions.
+
+        This will add q_token in each entry of the dataset.
+        -1 represent nil, and should be treated as padding_idx in embedding
+        """
+        for entry in self.entries:
+            tokens = self.dictionary.tokenize(entry['question'], False)
+            tokens = tokens[:max_length]
+            if len(tokens) < max_length:
+                # Note here we pad in front of the sentence
+                padding = [self.dictionary.padding_idx] * (max_length - len(tokens))
+                tokens = padding + tokens
+            utils.assert_eq(len(tokens), max_length)
+            entry['q_token'] = tokens
+
+    def tensorize(self):
+
+        seen_shape = False
+
+        for entry in self.entries:
+            question = np.array(entry['q_token'])
+            if not seen_shape:
+                print('> question.shape', question.shape)
+                seen_shape = True
+            question = torch.from_numpy(question)
+            entry['q_token'] = question
+
+            answer = entry['answer']
+            labels = np.array(answer['labels'])
+            scores = np.array(answer['scores'], dtype=np.float32)
+            if len(labels):
+                labels = torch.from_numpy(labels)
+                scores = torch.from_numpy(scores)
+                entry['answer']['labels'] = labels
+                entry['answer']['scores'] = scores
+            else:
+                entry['answer']['labels'] = None
+                entry['answer']['scores'] = None
+
+    def __getitem__(self, index):
+        entry = self.entries[index]
+
+        question = entry['q_token']
+        answer = entry['answer']
+        labels = answer['labels']
+        scores = answer['scores']
+        target = torch.zeros(self.num_ans_candidates)
+        if labels is not None:
+            target.scatter_(0, labels, scores)
+
+        return None, None, question, target
+        # features (36, 2048) -> image features (represented by 36 top objects / salient regions)
+        # spatials (36, 6) -> spatial features (() of 36 top objects)
+        # question (14,) -> question sentence sequence (tokenized)
+        # target (3129,) -> answer target (with soft labels)
+
+    def __len__(self):
+        return len(self.entries)
+
+    def loss_len(self):
+        return len(self.entries)
+
+if __name__ == '__main__':
+    
+    dictionary = Dictionary.load_from_file('data/dictionary.pkl')
+    dataset = VQAFeatureDatasetEnd2End('train')
