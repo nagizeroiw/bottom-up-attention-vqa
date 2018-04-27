@@ -382,6 +382,6 @@ class VQAFeatureDatasetEnd2End(Dataset):
         return len(self.entries)
 
 if __name__ == '__main__':
-    
+
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-    dataset = VQAFeatureDatasetEnd2End('train')
+    dataset = VQAFeatureDatasetEnd2End('train', dictionary)
