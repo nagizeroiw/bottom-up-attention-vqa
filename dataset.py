@@ -321,22 +321,11 @@ class VQAFeatureDatasetEnd2End(Dataset):
         self.entries, self.img2val, self.images = _load_dataset(dataroot, name, self.img_id2name, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
-        self.image_preprocess()
         self.tokenize()
         self.tensorize()
         print('> features and labels loaded.')
 
         self.seen_pshape = False
-
-    def image_preprocess(self):
-        for I in self.images:
-            I = skimage.io.imread(I)
-            if len(I.shape) == 2:
-                I = I[:, :, np.newaxis]
-                I = np.concatenate((I, I, I), axis=2)
-            I = resize(I, (299, 299))
-            I = I.astype('float32') / 255.0
-            I = torch.from_numpy(I.transpose([2, 0, 1]))
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
@@ -382,6 +371,13 @@ class VQAFeatureDatasetEnd2End(Dataset):
         entry = self.entries[index]
 
         img = self.images[self.img2val[entry['image_id']]]
+        I = skimage.io.imread(img)
+        if len(I.shape) == 2:
+            I = I[:, :, np.newaxis]
+            I = np.concatenate((I, I, I), axis=2)
+        I = resize(I, (299, 299))
+        I = I.astype('float32') / 255.0
+        I = torch.from_numpy(I.transpose([2, 0, 1]))
         question = entry['q_token']
         answer = entry['answer']
         labels = answer['labels']
