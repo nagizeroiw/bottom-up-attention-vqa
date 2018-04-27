@@ -321,6 +321,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
         self.entries, self.img2val, self.images = _load_dataset(dataroot, name, self.img_id2name, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
+        self.image_preprocess()
         self.tokenize()
         self.tensorize()
         print('> features and labels loaded.')
