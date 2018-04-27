@@ -8,6 +8,13 @@ import h5py
 import torch
 import random
 from torch.utils.data import Dataset
+import skimage.io
+from skimage.transform import resize
+from torchvision import transforms as trn
+preprocess = trn.Compose([
+    # trn.ToTensor(),
+    trn.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
 
 
 class Dictionary(object):
@@ -91,7 +98,8 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
     utils.assert_eq(len(questions), len(answers))
     entries = []
 
-    qid2eid = {}
+    images = []
+    img2val = {}
 
     qa_pairs = zip(questions, answers)
     random.shuffle(qa_pairs)
@@ -106,9 +114,10 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
         img_id = question['image_id']
         entries.append(_create_entry(img_id2val[img_id], question, answer))
-        qid2eid[question['question_id']] = len(entries) - 1
+        img2val[img_id] = len(images)
+        images.append(img_id2val[img_id])
 
-    return entries, qid2eid
+    return entries, img2val, images
 
 
 class VQAFeatureDataset(Dataset):
@@ -309,7 +318,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
 
         self.img_id2name = cPickle.load(open(os.path.join(dataroot, 'images', 'id2file.pkl')))
 
-        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2name, cpair_qids)
+        self.entries, self.img2val, self.images = _load_dataset(dataroot, name, self.img_id2name, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
         self.tokenize()
@@ -317,6 +326,16 @@ class VQAFeatureDatasetEnd2End(Dataset):
         print('> features and labels loaded.')
 
         self.seen_pshape = False
+
+    def image_preprocess(self):
+        for I in self.images:
+            I = skimage.io.imread(I)
+            if len(I.shape) == 2:
+                I = I[:, :, np.newaxis]
+                I = np.concatenate((I, I, I), axis=2)
+            I = resize(I, (299, 299))
+            I = I.astype('float32') / 255.0
+            I = torch.from_numpy(I.transpose([2, 0, 1]))
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
@@ -361,9 +380,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
     def __getitem__(self, index):
         entry = self.entries[index]
 
-        image_id = entry['image_id']
-        img = entry['image']
-
+        img = self.images[self.img2val[entry['image_id']]]
         question = entry['q_token']
         answer = entry['answer']
         labels = answer['labels']
@@ -372,9 +389,8 @@ class VQAFeatureDatasetEnd2End(Dataset):
         if labels is not None:
             target.scatter_(0, labels, scores)
 
-        return image_id, img, question, target
-        # features (36, 2048) -> image features (represented by 36 top objects / salient regions)
-        # spatials (36, 6) -> spatial features (() of 36 top objects)
+        return img, question, target
+        # img (3, 299, 299) -> RGB channels of the input image
         # question (14,) -> question sentence sequence (tokenized)
         # target (3129,) -> answer target (with soft labels)
 
@@ -389,7 +405,5 @@ if __name__ == '__main__':
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
     dataset = VQAFeatureDatasetEnd2End('train', dictionary)
     print(dataset[0])
-    print(dataset[199])
     dataset = VQAFeatureDatasetEnd2End('val', dictionary)
     print(dataset[0])
-    print(dataset[199])
