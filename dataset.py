@@ -361,6 +361,9 @@ class VQAFeatureDatasetEnd2End(Dataset):
     def __getitem__(self, index):
         entry = self.entries[index]
 
+        image_id = entry['image_id']
+        img = entry['image']
+
         question = entry['q_token']
         answer = entry['answer']
         labels = answer['labels']
@@ -369,7 +372,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
         if labels is not None:
             target.scatter_(0, labels, scores)
 
-        return None, None, question, target
+        return image_id, img, question, target
         # features (36, 2048) -> image features (represented by 36 top objects / salient regions)
         # spatials (36, 6) -> spatial features (() of 36 top objects)
         # question (14,) -> question sentence sequence (tokenized)
@@ -385,3 +388,8 @@ if __name__ == '__main__':
 
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
     dataset = VQAFeatureDatasetEnd2End('train', dictionary)
+    print(dataset[0])
+    print(dataset[199])
+    dataset = VQAFeatureDatasetEnd2End('valid', dictionary)
+    print(dataset[0])
+    print(dataset[199])
