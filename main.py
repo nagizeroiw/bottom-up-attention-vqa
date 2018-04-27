@@ -30,13 +30,16 @@ def parse_args():
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     parser.add_argument('--gamma', type=float, default=2.5, help='margin threshold gamma for pair_loss_margin')
 
-    parser.add_argument('--use_pair', dest='use_pair', action='store_true', help='whether use pair-wise batch feeding')
-    parser.add_argument('--no-use_pair', dest='use_pair', action='store_false', help='whether use pair-wise batch feeding')
+    parser.add_argument('--use_pair', dest='use_pair', action='store_true', help='whether use pair-wise batch feeding when training')
+    parser.add_argument('--no-use_pair', dest='use_pair', action='store_false', help='whether use pair-wise batch feeding when training')
     parser.add_argument('--filter_pair', dest='filter_pair', action='store_true', help='whether filter out non-complementary questions')
     parser.add_argument('--no-filter_pair', dest='filter_pair', action='store_false', help='whether filter out non-complementary questions')
+    parser.add_argument('--test_pair', dest='test_pair', action='store_true', help='whether use pair-wise batch feeding when test/eval')
+    parser.add_argument('--no-test_pair', dest='test_pair', action='store_false', help='whether use pair-wise batch feeding when test/eval')
 
     parser.set_defaults(use_pair=True)
-    parser.set_defaults(filter_pair=True)    
+    parser.set_defaults(filter_pair=True)
+    parser.set_defaults(test_pair=False)
     args = parser.parse_args()
     return args
 
@@ -58,7 +61,13 @@ if __name__ == '__main__':
     else:
         print('! use_pair False')
         train_dset = VQAFeatureDataset('train', dictionary, filter_pair=args.filter_pair)
-    eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=args.filter_pair)
+
+    if args.test_pair:
+        print('! test_pair True')
+        eval_dset = VQAFeatureDatasetWithPair('val', dictionary)
+    else:
+        print('! test_pair False')
+        eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=args.filter_pair)
     batch_size = args.batch_size
 
     print '> data loaded. time: %.2fs' % (time.time() - start)
@@ -72,8 +81,12 @@ if __name__ == '__main__':
         train_batch = batch_size / 2
     else:
         train_batch = batch_size
+    if args.test_pair:
+        test_batch = batch_size / 2
+    else:
+        test_batch = batch_size
     train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
-    eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
+    eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
     if args.task == 'train':
         train(model, train_loader, eval_loader, args)
     elif args.task == 'measure':
