@@ -278,7 +278,7 @@ class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 class VQAFeatureDatasetEnd2End(Dataset):
     def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
         print('!filter_pair', filter_pair)
-        super(VQAFeatureDataset, self).__init__()
+        super(VQAFeatureDatasetEnd2End, self).__init__()
         assert name in ['train', 'val']
 
         ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
