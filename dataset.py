@@ -390,6 +390,6 @@ if __name__ == '__main__':
     dataset = VQAFeatureDatasetEnd2End('train', dictionary)
     print(dataset[0])
     print(dataset[199])
-    dataset = VQAFeatureDatasetEnd2End('valid', dictionary)
+    dataset = VQAFeatureDatasetEnd2End('val', dictionary)
     print(dataset[0])
     print(dataset[199])
