@@ -378,6 +378,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
         I = resize(I, (299, 299))
         I = I.astype('float32') / 255.0
         I = torch.from_numpy(I.transpose([2, 0, 1]))
+        img = I
         question = entry['q_token']
         answer = entry['answer']
         labels = answer['labels']
