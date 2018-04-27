@@ -40,6 +40,7 @@ dataset_output_file = {
 def get_images(split):
     img_ids = []
     filenames = []
+    id2file = {}
     directory = os.path.join(DATAROOT, folder[split])
     for parent, dirnames, filenames in os.walk(directory):
         for filename in filenames:
@@ -48,18 +49,21 @@ def get_images(split):
                 # print(filename, ':', img_id)
                 img_ids.append(img_id)
                 filenames.append(os.path.join(directory, filename))
+                id2file[img_id] = os.path.join(directory, filename)
     print('> find %d images for split %s.' % (len(img_ids), split))
     to_save = {
         'image_ids': img_ids,
         'file_names': filenames
     }
     cPickle.dump(to_save, open(os.path.join(DATAROOT, dataset_output_file[split]), 'w'))
+    return id2file
 
 
 def get_all_images():
-    get_images('train')
-    get_images('valid')
-    get_images('test')
+    id2file = get_images('train')
+    id2file.update(get_images('valid'))
+    id2file.update(get_images('test'))
+    cPickle.dump(id2file, open(os.path.join(DATAROOT), 'id2file.pkl'), 'w')
 
 
 if __name__ == '__main__':
