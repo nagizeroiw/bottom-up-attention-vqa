@@ -251,18 +251,18 @@ class BaseModelWithCNN(nn.Module):
         if not self.seen_back2normal_shape:
             print(name, var.size())
 
-    def forward(self, i, q, labels):
+    def forward(self, v, b, q, labels):
         """Forward
 
-        i: [batch, 3, 299, 299]
-        q: [batch, 2, seq_length(14)]
-        labels: [batch, 2, n_ans(3129)]
+        v: [batch, 3, 299, 299]
+        q: [batch, seq_length(14)]
+        labels: [batch, n_ans(3129)]
 
         return: logits, not probs
         """
-        self.see(i, 'i')
-        _, v = myResnet(i)
-        self.see(v, 'v')
+        self.see(v, 'images')
+        _, v = myResnet(v)
+        self.see(v, 'visual features')
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [2 * batch, q_dim]
