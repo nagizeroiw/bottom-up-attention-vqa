@@ -261,7 +261,7 @@ class BaseModelWithCNN(nn.Module):
         return: logits, not probs
         """
         self.see(v, 'images')
-        _, v = myResnet(v)
+        _, v = self.cnn(v)
         self.see(v, 'visual features')
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
