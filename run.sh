@@ -6,7 +6,6 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --pair_loss_weight 0 \
     --pair_loss_type @att \
     --gamma 2.5 \
-    --no-use_pair \
     --model fine \
     --train_dataset end2end \
     --test_dataset end2end \
