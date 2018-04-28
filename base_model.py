@@ -261,7 +261,7 @@ class BaseModelWithCNN(nn.Module):
         return: logits, not probs
         """
         self.see(v, 'images')
-        _, v = myResnet(v)
+        _, v = self.cnn(v)
         self.see(v, 'visual features')
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
@@ -318,6 +318,12 @@ def build_fine(dataset, num_hid, args):
 
     cnn = getattr(resnet, args.cnn_model)()
     cnn.load_state_dict(torch.load(os.path.join(args.model_root, args.cnn_model + '.pth')))
+
+    for param in cnn.parameters():
+        param.requires_grad = False
+    for param in cnn.resnet.fc.parameters():
+        param.requires_grad = True
+
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.4)
     v_att = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
