@@ -251,7 +251,7 @@ class BaseModelWithCNN(nn.Module):
         if not self.seen_back2normal_shape:
             print(name, var.size())
 
-    def forward(self, v, b, q, labels):
+    def forward(self, v, q, labels):
         """Forward
 
         v: [batch, 3, 299, 299]

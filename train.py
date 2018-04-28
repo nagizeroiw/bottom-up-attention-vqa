@@ -111,20 +111,27 @@ def train(model, train_loader, eval_loader, args):
         bar = ProgressBar(maxval=len(train_loader))
         bar.start()
 
-        for i, (v, b, q, a) in enumerate(train_loader):
+        for i, items in enumerate(train_loader):
             '''
                 v:features (b, 2, 36, 2048) -> image features (represented by 36 top objects / salient regions)
                 b:spatials (b, 2, 36, 6) -> spatial features (() of 36 top objects)
                 q:question (b, 2, 14) -> question sentence sequence (tokenized)
                 a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
-            v = None if v is None else Variable(v).cuda()
-            b = None if b is None else Variable(b).cuda()
-            q = None if q is None else Variable(q).cuda()
-            a = None if a is None else Variable(a).cuda()
+            if args.train_dataset == 'end2end':
+                v, q, a = items
+                v = Variable(v).cuda()
+                q = Variable(q).cuda()
+                a = Variable(a).cuda()
+                pred, pair_loss, raw_pair_loss = model(v, q, a)
+            else:
+                v, b, q, a = items
+                v = Variable(v).cuda()
+                b = Variable(b).cuda()
+                q = Variable(q).cuda()
+                a = Variable(a).cuda()
+                pred, pair_loss, raw_pair_loss = model(v, b, q, a)
 
-            optim.zero_grad()
-            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
             optim.zero_grad()
             loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
             loss.backward()
@@ -161,7 +168,7 @@ def train(model, train_loader, eval_loader, args):
             (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
 
         model.train(False)
-        eval_score, eval_pair_loss, eval_raw_pair_loss = evaluate(model, eval_loader)
+        eval_score, eval_pair_loss, eval_raw_pair_loss = evaluate(model, eval_loader, args)
         model.train(True)
 
         logger.write('> validation time: %.2f' % (time.time() - train_time))
@@ -185,17 +192,27 @@ def train(model, train_loader, eval_loader, args):
         logger.write('\tbest score: %.2f' % (100 * best_eval_score))
 
 
-def evaluate(model, dataloader):
+def evaluate(model, dataloader, args):
     score = 0
     num_data = 0
     total_pair_loss = 0
     total_raw_pair_loss = 0
-    for v, b, q, a in iter(dataloader):
-        v = None if v is None else Variable(v, volatile=True).cuda()
-        b = None if b is None else Variable(b, volatile=True).cuda()
-        q = None if q is None else Variable(q, volatile=True).cuda()
-        a = None if a is None else Variable(a, volatile=True).cuda()
-        pred, pair_loss, raw_pair_loss = model(v, b, q, a)
+    for items in iter(dataloader):
+
+        if args.test_dataset == 'end2end':
+            v, q, a = items
+            v = Variable(v, volatile=True).cuda()
+            q = Variable(q, volatile=True).cuda()
+            a = Variable(a, volatile=True).cuda()
+            pred, pair_loss, raw_pair_loss = model(v, q, a)
+        else:
+            v, b, q, a = items
+            v = Variable(v, volatile=True).cuda()
+            b = Variable(b, volatile=True).cuda()
+            q = Variable(q, volatile=True).cuda()
+            a = Variable(a, volatile=True).cuda()
+            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
+
         batch_score = compute_score_with_logits(pred, a).sum()
         try:
             score += batch_score.data[0]
