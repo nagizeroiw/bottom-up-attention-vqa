@@ -389,7 +389,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
         if labels is not None:
             target.scatter_(0, labels, scores)
 
-        return img, question, target
+        return img, None, question, target
         # img (3, 299, 299) -> RGB channels of the input image
         # question (14,) -> question sentence sequence (tokenized)
         # target (3129,) -> answer target (with soft labels)

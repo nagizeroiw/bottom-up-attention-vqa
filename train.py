@@ -118,10 +118,10 @@ def train(model, train_loader, eval_loader, args):
                 q:question (b, 2, 14) -> question sentence sequence (tokenized)
                 a:target (b, 2, 3129) -> answer target (with soft labels)
             '''
-            v = Variable(v).cuda()
-            b = Variable(b).cuda()
-            q = Variable(q).cuda()
-            a = Variable(a).cuda()
+            v = None if v is None else Variable(v).cuda()
+            b = None if b is None else Variable(b).cuda()
+            q = None if q is None else Variable(q).cuda()
+            a = None if a is None else Variable(a).cuda()
 
             optim.zero_grad()
             pred, pair_loss, raw_pair_loss = model(v, b, q, a)
@@ -191,10 +191,10 @@ def evaluate(model, dataloader):
     total_pair_loss = 0
     total_raw_pair_loss = 0
     for v, b, q, a in iter(dataloader):
-        v = Variable(v, volatile=True).cuda()
-        b = Variable(b, volatile=True).cuda()
-        q = Variable(q, volatile=True).cuda()
-        a = Variable(a, volatile=True).cuda()
+        v = None if v is None else Variable(v, volatile=True).cuda()
+        b = None if b is None else Variable(b, volatile=True).cuda()
+        q = None if q is None else Variable(q, volatile=True).cuda()
+        a = None if a is None else Variable(a, volatile=True).cuda()
         pred, pair_loss, raw_pair_loss = model(v, b, q, a)
         batch_score = compute_score_with_logits(pred, a).sum()
         try:
