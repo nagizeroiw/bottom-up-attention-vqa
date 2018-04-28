@@ -1,4 +1,5 @@
 from __future__ import print_function
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,6 +9,8 @@ from classifier import SimpleClassifier
 from fc import FCNet
 from torch.autograd import Variable
 import random
+from backbone.resnet_utils import myResnet
+import backbone.resnet as resnet
 
 
 from torchvision import transforms as trn
@@ -228,7 +231,7 @@ class BaseModel(nn.Module):
         return logits, None, None
 
 class BaseModelWithCNN(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, args):
+    def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, cnn, args):
         super(BaseModel, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
@@ -236,6 +239,7 @@ class BaseModelWithCNN(nn.Module):
         self.q_net = q_net
         self.v_net = v_net
         self.classifier = classifier
+        self.cnn = cnn
         self.pair_loss_weight = args.pair_loss_weight
         self.pair_loss_type = args.pair_loss_type
         self.gamma = args.gamma
@@ -247,36 +251,18 @@ class BaseModelWithCNN(nn.Module):
         if not self.seen_back2normal_shape:
             print(name, var.size())
 
-    def forward(self, v, b, q, labels):
+    def forward(self, i, q, labels):
         """Forward
 
-        v: [batch, 2, num_objs(36), obj_dim(2048)]
-        b: [batch, 2, num_objs(36), b_dim(6)]
+        i: [batch, 3, 299, 299]
         q: [batch, 2, seq_length(14)]
         labels: [batch, 2, n_ans(3129)]
 
         return: logits, not probs
         """
-
-        if v.dim() == 4:  # handle pair loss
-            batch, _, num_objs, obj_dim = v.size()
-            _, __, ___, b_dim = b.size()
-            _, __, seq_length = q.size()
-
-            v = v.view(-1, num_objs, obj_dim)  # (2 * batch, num_objs, obj_dim)
-            b = b.view(-1, num_objs, b_dim)  # (2 * batch, num_objs, b_dim)
-            q = q.view(-1, seq_length)  # (2 * batch, seq_length)
-            with_pair_loss = True
-        else:
-            with_pair_loss = False
-
-        '''
-        if not self.seen_back2normal_shape:
-            print('v', v.size())
-            print('b', b.size())
-            print('q', q.size())
-            self.seen_back2normal_shape = True
-        '''
+        self.see(i, 'i')
+        v = myResnet(i)
+        self.see(v, 'v')
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [2 * batch, q_dim]
@@ -330,6 +316,8 @@ def build_dualatt(dataset, num_hid, args):
 
 def build_fine(dataset, num_hid, args):
 
+    cnn = getattr(resnet, args.cnn_model)()
+    cnn.load_state_dict(torch.load(os.path.join(args.model_root, args.model + '.pth')))
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.4)
     v_att = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
@@ -338,5 +326,5 @@ def build_fine(dataset, num_hid, args):
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
 
-    model = BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+    model = BaseModelWithCNN(w_emb, q_emb, v_att, q_net, v_net, classifier, cnn, args)
     return model

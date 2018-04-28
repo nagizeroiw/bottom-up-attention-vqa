@@ -9,8 +9,9 @@ class myResnet(nn.Module):
         self.resnet = resnet
 
     def forward(self, img, att_size=14):
-        x = img.unsqueeze(0)  # (3, w, d) -> (1, 3, w, d)
+        # img [batch_size, 3, 299, 299]
 
+        x = img
         x = self.resnet.conv1(x)
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)
