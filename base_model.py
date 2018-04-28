@@ -276,6 +276,8 @@ class BaseModelWithCNN(nn.Module):
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
 
+        self.seen_back2normal_shape = True
+
         return logits, None, None
 
 def build_baseline0(dataset, num_hid, args):
@@ -322,7 +324,7 @@ def build_fine(dataset, num_hid, args):
 
     for param in my_cnn.parameters():
         param.requires_grad = False
-    for param in my_cnn.resnet.fc.parameters():
+    for param in my_cnn.resnet.layer4.parameters():
         param.requires_grad = True
 
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
