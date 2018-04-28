@@ -8,4 +8,6 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --gamma 2.5 \
     --no-use_pair \
     --model fine \
+    --train_dataset end2end \
+    --test_dataset end2end \
     --seed 5293

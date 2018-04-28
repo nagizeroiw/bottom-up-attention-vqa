@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
 
-from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair
+from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End
 import base_model
 from train import train, measure
 import utils
@@ -32,16 +32,9 @@ def parse_args():
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     parser.add_argument('--gamma', type=float, default=2.5, help='margin threshold gamma for pair_loss_margin')
 
-    parser.add_argument('--use_pair', dest='use_pair', action='store_true', help='whether use pair-wise batch feeding when training')
-    parser.add_argument('--no-use_pair', dest='use_pair', action='store_false', help='whether use pair-wise batch feeding when training')
-    parser.add_argument('--filter_pair', dest='filter_pair', action='store_true', help='whether filter out non-complementary questions')
-    parser.add_argument('--no-filter_pair', dest='filter_pair', action='store_false', help='whether filter out non-complementary questions')
-    parser.add_argument('--test_pair', dest='test_pair', action='store_true', help='whether use pair-wise batch feeding when test/eval')
-    parser.add_argument('--no-test_pair', dest='test_pair', action='store_false', help='whether use pair-wise batch feeding when test/eval')
+    parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
+    parser.add_argument('--test_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
 
-    parser.set_defaults(use_pair=True)
-    parser.set_defaults(filter_pair=True)
-    parser.set_defaults(test_pair=False)
     args = parser.parse_args()
     return args
 
@@ -55,38 +48,42 @@ if __name__ == '__main__':
     torch.backends.cudnn.benchmark = True
 
     start = time.time()
+    batch_size = args.batch_size
+    train_batch = batch_size
+    test_batch = batch_size
 
     dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-    if args.use_pair:
-        print('! use_pair True')
+    if args.train_dataset == 'all':
+        train_dset = VQAFeatureDataset('train', dictionary, filter_pair=False)
+    elif args.train_dataset == 'filter':
+        train_dset = VQAFeatureDataset('train', dictionary, filter_pair=True)
+    elif args.train_dataset == 'pairwise':
+        train_batch = batch_size / 2
         train_dset = VQAFeatureDatasetWithPair('train', dictionary)
+    elif args.train_dataset == 'end2end':
+        train_dset = VQAFeatureDatasetEnd2End('train', dictionary, filter_pair=False)
     else:
-        print('! use_pair False')
-        train_dset = VQAFeatureDataset('train', dictionary, filter_pair=args.filter_pair)
+        raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
 
-    if args.test_pair:
-        print('! test_pair True')
+    if args.train_dataset == 'all':
+        eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
+    elif args.train_dataset == 'filter':
+        eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=True)
+    elif args.train_dataset == 'pairwise':
+        test_batch = batch_size
         eval_dset = VQAFeatureDatasetWithPair('val', dictionary)
+    elif args.train_dataset == 'end2end':
+        eval_dset = VQAFeatureDatasetEnd2End('val', dictionary, filter_pair=False)
     else:
-        print('! test_pair False')
-        eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=args.filter_pair)
-    batch_size = args.batch_size
-
+        raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
+        
     print '> data loaded. time: %.2fs' % (time.time() - start)
 
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_dset, args.num_hid, args).cuda()
     model.w_emb.init_embedding('data/glove6b_init_300d.npy')
-
     model = nn.DataParallel(model).cuda()
-    if args.use_pair:
-        train_batch = batch_size / 2
-    else:
-        train_batch = batch_size
-    if args.test_pair:
-        test_batch = batch_size / 2
-    else:
-        test_batch = batch_size
+
     train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
     if args.task == 'train':
