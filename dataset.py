@@ -325,6 +325,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
         self.tensorize()
         print('> features and labels loaded.')
 
+        self.v_dim = 2048
         self.seen_pshape = False
 
     def tokenize(self, max_length=14):
