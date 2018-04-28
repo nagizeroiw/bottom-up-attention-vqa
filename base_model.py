@@ -232,7 +232,7 @@ class BaseModel(nn.Module):
 
 class BaseModelWithCNN(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, cnn, args):
-        super(BaseModel, self).__init__()
+        super(BaseModelWithCNN, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
