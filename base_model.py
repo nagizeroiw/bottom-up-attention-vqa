@@ -261,7 +261,7 @@ class BaseModelWithCNN(nn.Module):
         return: logits, not probs
         """
         self.see(i, 'i')
-        v = myResnet(i)
+        _, v = myResnet(i)
         self.see(v, 'v')
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]

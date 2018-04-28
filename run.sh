@@ -1,4 +1,4 @@
-ID=dualatt_no_pair
+ID=test_resnet
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=1 python main.py \
     --output saved_models/$ID \
@@ -7,5 +7,5 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --pair_loss_type @att \
     --gamma 2.5 \
     --no-use_pair \
-    --model dualatt \
+    --model fine \
     --seed 5293
