@@ -318,10 +318,11 @@ def build_fine(dataset, num_hid, args):
 
     cnn = getattr(resnet, args.cnn_model)()
     cnn.load_state_dict(torch.load(os.path.join(args.model_root, args.cnn_model + '.pth')))
+    my_cnn = myResnet(cnn)
 
-    for param in cnn.parameters():
+    for param in my_cnn.parameters():
         param.requires_grad = False
-    for param in cnn.resnet.fc.parameters():
+    for param in my_cnn.resnet.fc.parameters():
         param.requires_grad = True
 
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
@@ -332,5 +333,5 @@ def build_fine(dataset, num_hid, args):
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
 
-    model = BaseModelWithCNN(w_emb, q_emb, v_att, q_net, v_net, classifier, cnn, args)
+    model = BaseModelWithCNN(w_emb, q_emb, v_att, q_net, v_net, classifier, my_cnn, args)
     return model
