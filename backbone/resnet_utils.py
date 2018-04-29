@@ -21,11 +21,7 @@ class myResnet(nn.Module):
         x = self.resnet.layer2(x)
         x = self.resnet.layer3(x)
         x = self.resnet.layer4(x)
-
-        print('final x', x.size())
-
         fc = x.mean(3).mean(2).squeeze()
-        print('fc', fc.size())
         if att_size > 0:
             batch, num_hid, _, __ = x.size()
             att = F.adaptive_avg_pool2d(x,[att_size,att_size]).view(-1, num_hid, att_size * att_size).permute(0, 2, 1)
