@@ -28,8 +28,8 @@ class myResnet(nn.Module):
         print('fc', fc.size())
         if att_size > 0:
             print('F.adaptive_avg_pool2d(x,[att_size,att_size])', F.adaptive_avg_pool2d(x,[att_size,att_size]).size())
-            print('after squeeze', F.adaptive_avg_pool2d(x,[att_size,att_size]).squeeze(3).size())
-            att = F.adaptive_avg_pool2d(x,[att_size,att_size]).squeeze(3).permute(0, 2, 1)
+            batch, num_hid, _, __ = x.size()
+            att = F.adaptive_avg_pool2d(x,[att_size,att_size]).reshape(-1, num_hid, att_size * att_size).permute(0, 2, 1)
             return fc, att
         else:
             return fc
