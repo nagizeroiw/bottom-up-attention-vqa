@@ -260,9 +260,7 @@ class BaseModelWithCNN(nn.Module):
 
         return: logits, not probs
         """
-        self.see(v, 'images')
         _, v = self.cnn(v)
-        self.see(v, 'visual features')
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [2 * batch, q_dim]
