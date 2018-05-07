@@ -54,9 +54,9 @@ if __name__ == '__main__':
         val_imgids = cPickle.load(open(val_ids_file))
         test_imgids = cPickle.load(open(test_ids_file))
     else:
-        train_imgids = utils.load_imageid('data/train2014')
-        val_imgids = utils.load_imageid('data/val2014')
-        test_imgids = utils.load_imageid('data/test2015')
+        train_imgids = utils.load_imageid('data/images/train2014')
+        val_imgids = utils.load_imageid('data/images/val2014')
+        test_imgids = utils.load_imageid('data/images/test2015')
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
         cPickle.dump(test_imgids, open(test_ids_file, 'wb'))
