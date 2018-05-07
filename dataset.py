@@ -227,7 +227,7 @@ class VQAFeatureDataset(Dataset):
         self.seen_pshape = False
 
     def training(self):
-        if self.name in ('train', 'val'):
+        if self.name in ('train'):
             return True
         else:
             return False
