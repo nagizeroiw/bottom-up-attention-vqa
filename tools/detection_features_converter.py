@@ -161,6 +161,7 @@ if __name__ == '__main__':
     with open(test_infile, "r+b") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
         bar = progressbar.ProgressBar(maxval=len(test_imgids))
+        bar.start()
         for i, item in enumerate(reader):
             item['num_boxes'] = int(item['num_boxes'])
             image_id = int(item['image_id'])
