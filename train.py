@@ -141,14 +141,14 @@ def train(model, train_loader, eval_loader, args):
 
             batch_score = compute_score_with_logits(pred, a).sum()
             if pair_loss is None:
-                total_loss += loss.data[0] * v.size(0)
+                total_loss += loss.item() * v.size(0)
             else:  # v.dim() == 4
-                total_loss += loss.data[0] * v.size(0) * 2
-                total_pair_loss += pair_loss.data[0] * v.size(0) * 2
-                total_raw_pair_loss += raw_pair_loss.data[0] * v.size(0) * 2
+                total_loss += loss.item() * v.size(0) * 2
+                total_pair_loss += pair_loss.item() * v.size(0) * 2
+                total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
                 # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))
             try:
-                train_score += batch_score.data[0]
+                train_score += batch_score.item()
             except:
                 train_score += batch_score
             bar.update(i)
@@ -216,14 +216,14 @@ def evaluate(model, dataloader, args):
 
         batch_score = compute_score_with_logits(pred, a).sum()
         try:
-            score += batch_score.data[0]
+            score += batch_score.item()
         except:
             score += batch_score
         num_data += pred.size(0)
         if pair_loss is not None:
-            total_pair_loss += pair_loss.data[0] * v.size(0) * 2
+            total_pair_loss += pair_loss.item() * v.size(0) * 2
         if raw_pair_loss is not None:
-            total_raw_pair_loss += raw_pair_loss.data[0] * v.size(0) * 2
+            total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
 
     total_pair_loss /= dataloader.dataset.loss_len()
     total_raw_pair_loss /= dataloader.dataset.loss_len()
