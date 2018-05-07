@@ -174,7 +174,7 @@ class VQAFeatureDataset(Dataset):
         assert name in ['train', 'val', 'test']
         self.name = name
 
-        if self.name in ('train', 'val'):
+        if self.training():
             ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
             label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
             self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
@@ -187,7 +187,7 @@ class VQAFeatureDataset(Dataset):
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
 
-        if self.name in ('train', 'val'):
+        if self.training():
             print('> loading complementary pairs file')
             self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
             # train 200394 pairs, valid 95144 pairs
@@ -227,6 +227,12 @@ class VQAFeatureDataset(Dataset):
 
         self.seen_pshape = False
 
+    def training(self):
+        if self.name == 'train':
+            return True
+        else:
+            return False
+
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
 
@@ -257,7 +263,7 @@ class VQAFeatureDataset(Dataset):
             question = torch.from_numpy(question)
             entry['q_token'] = question
 
-            if self.name in ('train', 'val'):
+            if self.training():
                 answer = entry['answer']
                 labels = np.array(answer['labels'])
                 scores = np.array(answer['scores'], dtype=np.float32)
@@ -277,7 +283,7 @@ class VQAFeatureDataset(Dataset):
         question = entry['q_token']
         question_id = entry['question_id']
 
-        if self.name in ('train', 'val'):
+        if self.training():
             answer = entry['answer']
             labels = answer['labels']
             scores = answer['scores']
