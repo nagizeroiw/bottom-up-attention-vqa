@@ -155,7 +155,7 @@ def train(model, train_loader, eval_loader, args):
             optim.zero_grad()
             loss = instance_bce_with_logits(pred, a, pair_loss, raw_pair_loss)
             loss.backward()
-            nn.utils.clip_grad_norm(model.parameters(), args.grad_clip_rate)
+            nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip_rate)
             optim.step()
 
             batch_score = compute_score_with_logits(pred, a).sum()
