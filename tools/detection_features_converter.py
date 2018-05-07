@@ -93,6 +93,7 @@ if __name__ == '__main__':
     val_counter = 0
     test_counter = 0
 
+    '''
     print("reading trainval tsv...")
     with open(infile, "r+b") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
@@ -153,8 +154,6 @@ if __name__ == '__main__':
                 assert False, 'Unknown image id: %d' % image_id
             bar.update(train_counter + val_counter)
         bar.finish()
-
-
     '''
     ############# test
     print('reading test tsv..')
@@ -206,7 +205,6 @@ if __name__ == '__main__':
                 assert False, 'Unknown image id: %d' % image_id
             bar.update(test_counter)
         bar.finish()
-    '''
     if len(train_imgids) != 0:
         print('Warning: train_image_ids is not empty')
 
