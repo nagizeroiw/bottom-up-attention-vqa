@@ -36,6 +36,9 @@ class QuestionEmbedding(nn.Module):
         assert rnn_type == 'LSTM' or rnn_type == 'GRU'
         rnn_cls = nn.LSTM if rnn_type == 'LSTM' else nn.GRU
 
+        if nlayers == 1:
+            dropout = 0
+
         self.rnn = rnn_cls(
             in_dim, num_hid, nlayers,
             bidirectional=bidirect,
