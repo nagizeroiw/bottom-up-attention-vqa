@@ -83,6 +83,8 @@ class BaseModel(nn.Module):
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
 
+        self.see(logits, 'logits')
+
         if with_pair_loss:
 
             ### no pair_loss (but use pair-wise training)
@@ -225,6 +227,7 @@ class BaseModel(nn.Module):
                 
                 raw_pair_loss = (pair_loss_1 + pair_loss_2).mean(dim=0)
                 pair_loss = self.pair_loss_weight * raw_pair_loss
+
         self.seen_back2normal_shape = True
         if with_pair_loss:
             return logits, pair_loss, raw_pair_loss
