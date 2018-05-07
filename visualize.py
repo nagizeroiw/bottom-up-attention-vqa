@@ -20,6 +20,43 @@ complementary_pairs_file = {
     'valid': 'v2_mscoco_val2014_complementary_pairs.json'
 }
 
+image_path = {
+    'train': 'train2014/COCO_train2014_000000',
+    'valid': 'val2014/COCO_val2014_000000'
+}
+
+
+def check(split):
+    questions = json.load(open(os.path.join(data_root, questions_file[split])))['questions']
+    annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
+
+    qid2ques = {}
+    qid2ans = {}
+    for q in questions:
+        qid = q['question_id']
+        ques = q['question']
+        qid2ques[qid] = ques
+    for a in annotations:
+        qid = a['question_id']
+        image_id = a['image_id']
+        ans = a['multiple_choice_answer']
+        qid2ans[qid] = (image_id, ans)
+
+    while True:
+        qid = raw_input('> ')
+        qid = int(qid)
+        if qid not in qid2ans:
+            print('! cannot find question id: %s' % qid)
+            continue
+        image_id, ans = qid2ans[qid]
+
+        file_name = image_path[split] + '%06d.jpg' % int(image_id)
+        print('file name:', file_name)
+        os.system('scp %s ./vis/' % ('jungpu6:~/vqa-butd/data/images/%s' % file_name))
+        print('    image_id: %s' % image_id)
+        print('    question: %s' % qid2ques[qid])
+        print('    ans: %s' % ans)
+
 def process(split):
     questions = json.load(open(os.path.join(data_root, questions_file[split])))['questions']
     annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
@@ -61,5 +98,5 @@ if __name__ == '__main__':
     try:
         split = sys.argv[1]
     except KeyError:
-        split = 'train'
-    process(split)
+        split = 'valid'
+    check(split)

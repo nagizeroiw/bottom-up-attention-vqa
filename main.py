@@ -74,7 +74,7 @@ if __name__ == '__main__':
         elif args.train_dataset == 'filter':
             eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=True)
         elif args.train_dataset == 'pairwise':
-            test_batch = batch_size
+            test_batch = batch_size / 2
             eval_dset = VQAFeatureDatasetWithPair('val', dictionary)
         elif args.train_dataset == 'end2end':
             eval_dset = VQAFeatureDatasetEnd2End('val', dictionary, filter_pair=False)

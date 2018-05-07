@@ -233,7 +233,7 @@ class BaseModel(nn.Module):
 
 class BaseModelStackAtt(nn.Module):
     def __init__(self, w_emb, q_emb, v_atts, q_net, v_net, query_net, classifier, args):
-        super(BaseModel, self).__init__()
+        super(BaseModelStackAtt, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att1, self.v_att2, self.v_att3 = v_atts
