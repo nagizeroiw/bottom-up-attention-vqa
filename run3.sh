@@ -1,4 +1,4 @@
-ID=dualatt_2layer
+ID=dualatt_pairwise
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=3 python main.py \
     --output saved_models/$ID \
@@ -7,4 +7,6 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --pair_loss_type @att \
     --gamma 2.5 \
     --model dualatt \
-    --rnn_layer 2
+    --train_dataset pairwise \
+    --test_dataset all \
+    --seed 1919

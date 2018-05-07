@@ -9,4 +9,4 @@ CUDA_VISIBLE_DEVICES=2 python main.py \
     --model dualatt \
     --train_dataset pairwise \
     --test_dataset all \
-    --seed 5293
+    --seed 1919
