@@ -97,10 +97,9 @@ if __name__ == '__main__':
     with open(infile, "r+b") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
 
-        bar = progressbar.ProgressBar(maxval=len(reader))
+        bar = progressbar.ProgressBar(maxval=len(train_imgids)+len(val_imgids))
         bar.start()
         for i, item in enumerate(reader):
-            bar.update(i)
             item['num_boxes'] = int(item['num_boxes'])
             image_id = int(item['image_id'])
             image_w = float(item['image_w'])
@@ -152,16 +151,17 @@ if __name__ == '__main__':
                 val_counter += 1
             else:
                 assert False, 'Unknown image id: %d' % image_id
+            bar.update(train_counter + val_counter)
         bar.finish()
 
 
+    '''
     ############# test
     print('reading test tsv..')
     with open(test_infile, "r+b") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
-        bar = progressbar.ProgressBar(maxval=len(reader))
+        bar = progressbar.ProgressBar(maxval=len(test_imgids))
         for i, item in enumerate(reader):
-            bar.update(i)
             item['num_boxes'] = int(item['num_boxes'])
             image_id = int(item['image_id'])
             image_w = float(item['image_w'])
@@ -204,8 +204,9 @@ if __name__ == '__main__':
                 test_counter += 1
             else:
                 assert False, 'Unknown image id: %d' % image_id
+            bar.update(test_counter)
         bar.finish()
-
+    '''
     if len(train_imgids) != 0:
         print('Warning: train_image_ids is not empty')
 
