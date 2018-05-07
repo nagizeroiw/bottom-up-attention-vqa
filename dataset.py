@@ -174,13 +174,12 @@ class VQAFeatureDataset(Dataset):
         assert name in ['train', 'val', 'test']
         self.name = name
 
-        if self.training():
-            ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
-            label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
-            self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
-            self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
-            self.num_ans_candidates = len(self.ans2label)
-            print('> num_ans_candidates:', self.num_ans_candidates)
+        ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
+        label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
+        self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
+        self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
+        self.num_ans_candidates = len(self.ans2label)
+        print('> num_ans_candidates:', self.num_ans_candidates)
 
         self.dictionary = dictionary
 

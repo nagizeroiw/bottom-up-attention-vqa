@@ -104,7 +104,7 @@ if __name__ == '__main__':
         print '> data loaded. time: %.2fs' % (time.time() - start)
 
         constructor = 'build_%s' % args.model
-        model = getattr(base_model, constructor)(None, args.num_hid, args).cuda()
+        model = getattr(base_model, constructor)(test_dset, args.num_hid, args).cuda()
         model.w_emb.init_embedding('data/glove6b_init_300d.npy')
         model = nn.DataParallel(model).cuda()
 
