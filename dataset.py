@@ -82,6 +82,43 @@ def _create_entry(img, question, answer):
 
 def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
     """Load entries
+    img_id2val: dict {img_id -> val} val can be used to retrieve image or features
+    dataroot: root path of dataset
+    name: 'train', 'val'
+    """
+    question_path = os.path.join(
+        dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
+    questions = sorted(json.load(open(question_path))['questions'],
+                       key=lambda x: x['question_id'])
+    answer_path = os.path.join(dataroot, 'cache', '%s_target.pkl' % name)
+    answers = cPickle.load(open(answer_path, 'rb'))
+    answers = sorted(answers, key=lambda x: x['question_id'])
+
+    utils.assert_eq(len(questions), len(answers))
+    entries = []
+
+    qid2eid = {}
+
+    qa_pairs = zip(questions, answers)
+    random.shuffle(qa_pairs)
+
+    for question, answer in qa_pairs:
+        utils.assert_eq(question['question_id'], answer['question_id'])
+        utils.assert_eq(question['image_id'], answer['image_id'])
+
+        # only load questions that are included in complementary pairs list.
+        if cpair_qids is not None and question['question_id'] not in cpair_qids:
+            continue
+
+        img_id = question['image_id']
+        entries.append(_create_entry(img_id2val[img_id], question, answer))
+        qid2eid[question['question_id']] = len(entries) - 1
+
+    return entries, qid2eid
+
+
+def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
+    """Load entries
 
     img_id2val: dict {img_id -> val} val can be used to retrieve image or features
     dataroot: root path of dataset
@@ -124,31 +161,33 @@ class VQAFeatureDataset(Dataset):
     def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
         print('!filter_pair', filter_pair)
         super(VQAFeatureDataset, self).__init__()
-        assert name in ['train', 'val']
+        assert name in ['train', 'val', 'test']
         self.name = name
 
-        ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
-        label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
-        self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
-        self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
-        self.num_ans_candidates = len(self.ans2label)
-        print('> num_ans_candidates:', self.num_ans_candidates)
+        if name in ('train', 'val'):
+            ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
+            label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
+            self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
+            self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
+            self.num_ans_candidates = len(self.ans2label)
+            print('> num_ans_candidates:', self.num_ans_candidates)
 
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
 
-        print('> loading complementary pairs file')
-        self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
-        # train 200394 pairs, valid 95144 pairs
-        # train 443757 questions, valid 214354 questions
+        if name in ('train', 'val'):
+            print('> loading complementary pairs file')
+            self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+            # train 200394 pairs, valid 95144 pairs
+            # train 443757 questions, valid 214354 questions
 
-        cpair_qids = set()
-        for qid1, qid2 in self.pairs:
-            cpair_qids.add(qid1)
-            cpair_qids.add(qid2)
-        print('complementary pairs list covers %d questions.' % len(cpair_qids))
+            cpair_qids = set()
+            for qid1, qid2 in self.pairs:
+                cpair_qids.add(qid1)
+                cpair_qids.add(qid2)
+            print('complementary pairs list covers %d questions.' % len(cpair_qids))
 
         print('> loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
@@ -166,7 +205,7 @@ class VQAFeatureDataset(Dataset):
         else:
             print('> load all questions.')
             cpair_qids = None
-        self.entries, _, __ = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
+        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
 
@@ -319,7 +358,7 @@ class VQAFeatureDatasetEnd2End(Dataset):
 
         self.img_id2name = cPickle.load(open(os.path.join(dataroot, 'images', 'id2file.pkl')))
 
-        self.entries, self.img2val, self.images = _load_dataset(dataroot, name, self.img_id2name, cpair_qids)
+        self.entries, self.img2val, self.images = _load_dataset_end2end(dataroot, name, self.img_id2name, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
         self.tokenize()
