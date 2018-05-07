@@ -127,6 +127,9 @@ def train(model, train_loader, eval_loader, args):
         total_pair_loss = 0
         total_raw_pair_loss = 0
         t = time.time()
+        
+        logger.write(model_setting(args))
+        logger.write(str(args))
 
         bar = ProgressBar(maxval=len(train_loader))
         bar.start()
@@ -182,8 +185,6 @@ def train(model, train_loader, eval_loader, args):
         train_time = time.time()
 
         logger.write('> epoch %d, train time: %.2f' % (epoch, train_time - t))
-        logger.write(model_setting(args))
-        logger.write(str(args))
         logger.write('\ttrain_loss: %.2f, train_pair_loss: %.7f, train_raw_pair_loss: %.7f, train_score: %.2f' % \
             (total_loss, total_pair_loss, total_raw_pair_loss, train_score))
 
