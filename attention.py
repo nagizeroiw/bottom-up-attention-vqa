@@ -47,6 +47,11 @@ class NewAttention(nn.Module):
         w = nn.functional.softmax(logits, dim=1)
         return w
 
+    def keep_prob(self, v, q):
+        logits = self.logits(v, q)
+        p = nn.functional.sigmoid(logits)
+        return p
+
     def logits(self, v, q):
         batch, k, _ = v.size()
 

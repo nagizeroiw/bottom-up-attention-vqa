@@ -32,6 +32,8 @@ def parse_args():
     parser.add_argument('--pair_loss_weight', type=float, default=1e-4, help='alpha in pair loss')
     parser.add_argument('--gamma', type=float, default=2.5, help='margin threshold gamma for pair_loss_margin')
 
+    parser.add_argument('--stackatt_nlayers', type=int, default=1, help='1|2|3')
+
     parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
     parser.add_argument('--test_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
 

@@ -83,9 +83,6 @@ class BaseModel(nn.Module):
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
 
-        if not self.seen_back2normal_shape:
-            self.see(logits, 'logits')
-
         if with_pair_loss:
 
             ### no pair_loss (but use pair-wise training)
@@ -233,6 +230,90 @@ class BaseModel(nn.Module):
             return logits, pair_loss, raw_pair_loss
         return logits, None, None
 
+
+class BaseModelStackAtt(nn.Module):
+    def __init__(self, w_emb, q_emb, v_atts, q_net, v_net, query_net, classifier, args):
+        super(BaseModel, self).__init__()
+        self.w_emb = w_emb
+        self.q_emb = q_emb
+        self.v_att1, self.v_att2, self.v_att3 = v_atts
+        self.q_net = q_net
+        self.v_net = v_net
+        self.query_net = query_net
+        self.classifier = classifier
+        self.pair_loss_weight = args.pair_loss_weight
+        self.pair_loss_type = args.pair_loss_type
+        self.gamma = args.gamma
+        self.num_hid = args.num_hid
+
+        self.stackatt_nlayers = args.stackatt_nlayers
+
+        self.seen_back2normal_shape = False
+
+    def see(self, var, name):
+        if not self.seen_back2normal_shape:
+            print(name, var.size())
+
+    def forward(self, v, b, q, labels):
+        """Forward
+
+        v: [batch, 2, num_objs(36), obj_dim(2048)]
+        b: [batch, 2, num_objs(36), b_dim(6)]
+        q: [batch, 2, seq_length(14)]
+        labels: [batch, 2, n_ans(3129)]
+
+        return: logits, not probs
+        """
+
+        if v.dim() == 4:  # handle pair loss
+            batch, _, num_objs, obj_dim = v.size()
+            _, __, ___, b_dim = b.size()
+            _, __, seq_length = q.size()
+
+            v = v.view(-1, num_objs, obj_dim)  # (batch, num_objs, obj_dim)
+            b = b.view(-1, num_objs, b_dim)  # (batch, num_objs, b_dim)
+            q = q.view(-1, seq_length)  # (batch, seq_length)
+            with_pair_loss = True
+        else:
+            with_pair_loss = False
+
+
+        w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
+        q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
+
+        keep1 = self.v_att1.keep_prob(v, q_emb) # keep prob [batch, num_objs]
+        att1 = nn.functional.softmax(keep1, dim=1)
+        v_emb1 = (att1 * v).sum(1)  # 1st-attended feature vector [batch, obj_dim]
+        v_emb = v_emb1
+
+        if self.stackatt_nlayers > 1:
+
+            query2 = self.query_net(v_emb1) * q_emb # 2nd-attention query [batch, q_dim]
+            keep2 = self.v_att2.keep_prob(v, query2)
+            att2 = nn.functional.softmax(keep1 * keep2, dim=1)
+            v_emb2 = (att2 * v).sum(1)  # 2nd-attended feature vector [batch, obj_dim]
+
+            v_emb = v_emb2
+
+        if self.stackatt_nlayers > 2:
+
+            query3 = self.query_net(v_emb2) * q_emb # 3st-attention query [batch, q_dim]
+            keep3 = self.v_att3.keep_prob(v, query3)
+            att3 = nn.functional.softmax(keep1 * keep2 * keep3, dim=1)
+            v_emb3 = (att3 * v).sum(1)
+
+            v_emb = v_emb3
+
+        q_repr = self.q_net(q_emb)  # question representation [batch, num_hid]
+        v_repr = self.v_net(v_emb)  # image representation [batch, num_hid]
+        joint_repr = q_repr * v_repr  # joint embedding (joint representation) [batch, num_hid]
+
+        logits = self.classifier(joint_repr)  # answer (answer probabilities) [batch, n_answers]
+
+        self.seen_back2normal_shape = True
+        return logits, None, None
+
+
 class BaseModelWithCNN(nn.Module):
     def __init__(self, w_emb, q_emb, v_att, q_net, v_net, classifier, cnn, args):
         super(BaseModelWithCNN, self).__init__()
@@ -313,6 +394,23 @@ def build_dualatt(dataset, num_hid, args):
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
 
     model = BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier, args)
+    return model
+
+
+def build_stackatt(dataset, num_hid, args):
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
+    q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
+    v_att1 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    v_att2 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    v_att3 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    q_net = FCNet([q_emb.num_hid, num_hid])
+    v_net = FCNet([dataset.v_dim, num_hid])
+    query_net = FCNet([dataset.v_dim, num_hid])
+
+    classifier = SimpleClassifier(
+        num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
+
+    model = BaseModelStackAtt(w_emb, q_emb, (v_att1, v_att2, v_att3), q_net, v_net, query_net, classifier, args)
     return model
 
 
