@@ -227,7 +227,7 @@ class VQAFeatureDataset(Dataset):
         self.seen_pshape = False
 
     def training(self):
-        if self.name == 'train':
+        if self.name in ('train', 'val'):
             return True
         else:
             return False
@@ -307,8 +307,8 @@ class VQAFeatureDataset(Dataset):
 
 class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
-    def __init__(self, name, dictionary, dataroot='data'):
-            super(VQAFeatureDatasetWithPair, self).__init__(name, dictionary, dataroot)
+    def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
+            super(VQAFeatureDatasetWithPair, self).__init__(name, dictionary, dataroot, filter_pair)
 
     def __getitem__(self, index):
         qid1, qid2 = self.pairs[index]
