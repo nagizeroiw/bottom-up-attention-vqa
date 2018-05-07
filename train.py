@@ -81,22 +81,21 @@ def measure(model, test_loader, args):
 
     print('> total questions: %d' % len(test_loader.dataset))
 
-    for epoch in range(num_epochs):
+    for i, (v, b, q, qid) in enumerate(test_loader):
+        v = Variable(v).cuda()
+        b = Variable(b).cuda()
+        q = Variable(q).cuda()
+        qid = Variable(qid).cuda()
 
-        for i, (v, b, q, i) in enumerate(test_loader):
-            v = Variable(v).cuda()
-            b = Variable(b).cuda()
-            q = Variable(q).cuda()
-            i = Variable(i).cuda()
+        pred, _, __ = model(v, b, q, qid)
+        logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
+        print(logits.size())
+        for k in range(logits.size()[0]):
+            print(int(qid[k]), int(logits[k]), label2ans[int(logits[k])])
+            assert int(qid[k]) not in all_results
+            all_results[int(qid[k])] = label2ans[int(logits[k])]
 
-            pred, _, __ = model(v, b, q, i)
-            logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
-            print(logits.size())
-            for k in range(logits.size()[0]):
-                print(int(i[k]), int(logits[k]), label2ans[int(logits[k])])
-                assert int(i[k]) not in all_results
-                all_results[int(i[k])] = label2ans[int(logits[k])]
-
+        break
 
     results = []
     for qid, ans in all_results.iteritems():
