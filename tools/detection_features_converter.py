@@ -202,9 +202,10 @@ if __name__ == '__main__':
                     dtype=np.float32).reshape((item['num_boxes'], -1))
                 test_spatial_img_features[test_counter, :, :] = spatial_features
                 test_counter += 1
+                bar.update(test_counter)
             else:
                 assert False, 'Unknown image id: %d' % image_id
-            bar.update(test_counter)
+            
         bar.finish()
     if len(train_imgids) != 0:
         print('Warning: train_image_ids is not empty')
