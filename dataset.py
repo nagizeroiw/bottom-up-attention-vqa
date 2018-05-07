@@ -69,8 +69,9 @@ class Dictionary(object):
 
 
 def _create_entry(img, question, answer):
-    answer.pop('image_id')
-    answer.pop('question_id')
+    if answer is not None:
+        answer.pop('image_id')
+        answer.pop('question_id')
     entry = {
         'question_id' : question['question_id'],
         'image_id'    : question['image_id'],
@@ -90,29 +91,38 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
         dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
     questions = sorted(json.load(open(question_path))['questions'],
                        key=lambda x: x['question_id'])
-    answer_path = os.path.join(dataroot, 'cache', '%s_target.pkl' % name)
-    answers = cPickle.load(open(answer_path, 'rb'))
-    answers = sorted(answers, key=lambda x: x['question_id'])
+    try:
+        answer_path = os.path.join(dataroot, 'cache', '%s_target.pkl' % name)
+        answers = cPickle.load(open(answer_path, 'rb'))
+        answers = sorted(answers, key=lambda x: x['question_id'])
+    except:
+        answers = None
 
     utils.assert_eq(len(questions), len(answers))
     entries = []
 
     qid2eid = {}
 
-    qa_pairs = zip(questions, answers)
-    random.shuffle(qa_pairs)
+    if answers is not None:  # train / val
+        qa_pairs = zip(questions, answers)
+        random.shuffle(qa_pairs)
 
-    for question, answer in qa_pairs:
-        utils.assert_eq(question['question_id'], answer['question_id'])
-        utils.assert_eq(question['image_id'], answer['image_id'])
+        for question, answer in qa_pairs:
+            utils.assert_eq(question['question_id'], answer['question_id'])
+            utils.assert_eq(question['image_id'], answer['image_id'])
 
-        # only load questions that are included in complementary pairs list.
-        if cpair_qids is not None and question['question_id'] not in cpair_qids:
-            continue
+            # only load questions that are included in complementary pairs list.
+            if cpair_qids is not None and question['question_id'] not in cpair_qids:
+                continue
 
-        img_id = question['image_id']
-        entries.append(_create_entry(img_id2val[img_id], question, answer))
-        qid2eid[question['question_id']] = len(entries) - 1
+            img_id = question['image_id']
+            entries.append(_create_entry(img_id2val[img_id], question, answer))
+            qid2eid[question['question_id']] = len(entries) - 1
+    else:  # test
+        for question in questions:
+            img_id = question['image_id']
+            entries.append(_create_entry(img_id2val[img_id], question, None))
+            qid2eid[question['question_id']] = len(entries) - 1
 
     return entries, qid2eid
 
@@ -164,7 +174,7 @@ class VQAFeatureDataset(Dataset):
         assert name in ['train', 'val', 'test']
         self.name = name
 
-        if name in ('train', 'val'):
+        if self.training():
             ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
             label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
             self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
@@ -177,7 +187,7 @@ class VQAFeatureDataset(Dataset):
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
 
-        if name in ('train', 'val'):
+        if self.training():
             print('> loading complementary pairs file')
             self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
             # train 200394 pairs, valid 95144 pairs
@@ -217,6 +227,12 @@ class VQAFeatureDataset(Dataset):
 
         self.seen_pshape = False
 
+    def training(self):
+        if self.name == 'train':
+            return True
+        else:
+            return False
+
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
 
@@ -247,36 +263,42 @@ class VQAFeatureDataset(Dataset):
             question = torch.from_numpy(question)
             entry['q_token'] = question
 
-            answer = entry['answer']
-            labels = np.array(answer['labels'])
-            scores = np.array(answer['scores'], dtype=np.float32)
-            if len(labels):
-                labels = torch.from_numpy(labels)
-                scores = torch.from_numpy(scores)
-                entry['answer']['labels'] = labels
-                entry['answer']['scores'] = scores
-            else:
-                entry['answer']['labels'] = None
-                entry['answer']['scores'] = None
+            if self.training():
+                answer = entry['answer']
+                labels = np.array(answer['labels'])
+                scores = np.array(answer['scores'], dtype=np.float32)
+                if len(labels):
+                    labels = torch.from_numpy(labels)
+                    scores = torch.from_numpy(scores)
+                    entry['answer']['labels'] = labels
+                    entry['answer']['scores'] = scores
+                else:
+                    entry['answer']['labels'] = None
+                    entry['answer']['scores'] = None
 
     def __getitem__(self, index):
         entry = self.entries[index]
         features = self.features[entry['image']]
         spatials = self.spatials[entry['image']]
-
         question = entry['q_token']
-        answer = entry['answer']
-        labels = answer['labels']
-        scores = answer['scores']
-        target = torch.zeros(self.num_ans_candidates)
-        if labels is not None:
-            target.scatter_(0, labels, scores)
+        question_id = entry['question_id']
 
-        return features, spatials, question, target
+        if self.training():
+            answer = entry['answer']
+            labels = answer['labels']
+            scores = answer['scores']
+            target = torch.zeros(self.num_ans_candidates)
+            if labels is not None:
+                target.scatter_(0, labels, scores)
+
+            return features, spatials, question, target
+        else:
+            return features, spatials, question, question_id
         # features (36, 2048) -> image features (represented by 36 top objects / salient regions)
         # spatials (36, 6) -> spatial features (() of 36 top objects)
         # question (14,) -> question sentence sequence (tokenized)
-        # target (3129,) -> answer target (with soft labels)
+        # @@train/val: target (3129,) -> answer target (with soft labels)
+        # @@test: question_id (1,) -> question id (integar?)
 
     def __len__(self):
         return len(self.entries)

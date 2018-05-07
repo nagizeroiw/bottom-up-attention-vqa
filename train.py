@@ -5,7 +5,8 @@ import torch.nn as nn
 import utils
 from torch.autograd import Variable
 from progressbar import ProgressBar
-import random
+import json
+import cPickle
 
 seen_loss_shape = False
 
@@ -65,26 +66,46 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
-def measure(model, train_loader, eval_loader, args):
+def measure(model, test_loader, args):
 
     num_epochs = args.epochs
     # load from start_with
     assert args.start_with is not None
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
+    model.train(False)
+
+    label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
+    label2ans = cPickle.load(open(label2ans_file, 'rb'))
+
+    all_results = {}
+
+    print('> total questions: %d' % len(test_loader.dataset))
 
     for epoch in range(num_epochs):
 
-        bar = ProgressBar(maxval=len(train_loader))
-        bar.start()
-        for i, (v, b, q, a) in enumerate(train_loader):
-            v = Variable(v, requires_grad=True).cuda()
-            b = Variable(b, requires_grad=True).cuda()
-            q = Variable(q, requires_grad=True).cuda()
-            a = Variable(a, requires_grad=True).cuda()
+        for i, (v, b, q, i) in enumerate(test_loader):
+            v = Variable(v).cuda()
+            b = Variable(b).cuda()
+            q = Variable(q).cuda()
+            i = Variable(i).cuda()
 
-            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
-            bar.update(i)
-        bar.finish()
+            pred, _, __ = model(v, b, q, i)
+            logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
+            print(logits.size())
+            for k in range(logits.size()[0]):
+                print(int(i[k]), int(logits[k]), label2ans[int(logits[k])])
+                assert int(i[k]) not in all_results
+                all_results[int(i[k])] = label2ans[int(logits[k])]
+
+
+    results = []
+    for qid, ans in all_results.iteritems():
+        results.append({
+            'question_id': qid,
+            'answer': ans
+            })
+    with open('results.json', 'w') as fp:
+        json.dump(results, fp)
 
 
 def train(model, train_loader, eval_loader, args):
@@ -202,17 +223,19 @@ def evaluate(model, dataloader, args):
 
         if args.test_dataset == 'end2end':
             v, q, a = items
-            v = Variable(v, volatile=True).cuda()
-            q = Variable(q, volatile=True).cuda()
-            a = Variable(a, volatile=True).cuda()
-            pred, pair_loss, raw_pair_loss = model(v, q, a)
+            with torch.no_grad():
+                v = Variable(v).cuda()
+                q = Variable(q).cuda()
+                a = Variable(a).cuda()
+                pred, pair_loss, raw_pair_loss = model(v, q, a)
         else:
             v, b, q, a = items
-            v = Variable(v, volatile=True).cuda()
-            b = Variable(b, volatile=True).cuda()
-            q = Variable(q, volatile=True).cuda()
-            a = Variable(a, volatile=True).cuda()
-            pred, pair_loss, raw_pair_loss = model(v, b, q, a)
+            with torch.no_grad():
+                v = Variable(v).cuda()
+                b = Variable(b).cuda()
+                q = Variable(q).cuda()
+                a = Variable(a).cuda()
+                pred, pair_loss, raw_pair_loss = model(v, b, q, a)
 
         batch_score = compute_score_with_logits(pred, a).sum()
         try:

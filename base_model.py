@@ -301,8 +301,12 @@ def build_baseline0_newatt(dataset, num_hid, args):
 
 
 def build_dualatt(dataset, num_hid, args):
+    if dataset is not None:
+        ntoken = dataset.dictionary.ntoken
+    else:
+        ntoken = 3129
 
-    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
+    w_emb = WordEmbedding(ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
     v_att = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])

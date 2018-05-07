@@ -13,7 +13,7 @@ import utils
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, default='train', help='train|measure')
+    parser.add_argument('--task', type=str, default='train', help='train|test')
     parser.add_argument('--epochs', type=int, default=40)
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0_newatt')
@@ -43,50 +43,71 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
 
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed(args.seed)
-    torch.backends.cudnn.benchmark = True
-
-    start = time.time()
-    batch_size = args.batch_size
-    train_batch = batch_size
-    test_batch = batch_size
-
-    dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-    if args.train_dataset == 'all':
-        train_dset = VQAFeatureDataset('train', dictionary, filter_pair=False)
-    elif args.train_dataset == 'filter':
-        train_dset = VQAFeatureDataset('train', dictionary, filter_pair=True)
-    elif args.train_dataset == 'pairwise':
-        train_batch = batch_size / 2
-        train_dset = VQAFeatureDatasetWithPair('train', dictionary)
-    elif args.train_dataset == 'end2end':
-        train_dset = VQAFeatureDatasetEnd2End('train', dictionary, filter_pair=False)
-    else:
-        raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
-
-    if args.train_dataset == 'all':
-        eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
-    elif args.train_dataset == 'filter':
-        eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=True)
-    elif args.train_dataset == 'pairwise':
-        test_batch = batch_size
-        eval_dset = VQAFeatureDatasetWithPair('val', dictionary)
-    elif args.train_dataset == 'end2end':
-        eval_dset = VQAFeatureDatasetEnd2End('val', dictionary, filter_pair=False)
-    else:
-        raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
-        
-    print '> data loaded. time: %.2fs' % (time.time() - start)
-
-    constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_dset, args.num_hid, args).cuda()
-    model.w_emb.init_embedding('data/glove6b_init_300d.npy')
-    model = nn.DataParallel(model).cuda()
-
-    train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
-    eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
     if args.task == 'train':
+
+        torch.manual_seed(args.seed)
+        torch.cuda.manual_seed(args.seed)
+        torch.backends.cudnn.benchmark = True
+
+        start = time.time()
+        batch_size = args.batch_size
+        train_batch = batch_size
+        test_batch = batch_size
+
+        dictionary = Dictionary.load_from_file('data/dictionary.pkl')
+        if args.train_dataset == 'all':
+            train_dset = VQAFeatureDataset('train', dictionary, filter_pair=False)
+        elif args.train_dataset == 'filter':
+            train_dset = VQAFeatureDataset('train', dictionary, filter_pair=True)
+        elif args.train_dataset == 'pairwise':
+            train_batch = batch_size / 2
+            train_dset = VQAFeatureDatasetWithPair('train', dictionary)
+        elif args.train_dataset == 'end2end':
+            train_dset = VQAFeatureDatasetEnd2End('train', dictionary, filter_pair=False)
+        else:
+            raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
+
+        if args.train_dataset == 'all':
+            eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
+        elif args.train_dataset == 'filter':
+            eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=True)
+        elif args.train_dataset == 'pairwise':
+            test_batch = batch_size
+            eval_dset = VQAFeatureDatasetWithPair('val', dictionary)
+        elif args.train_dataset == 'end2end':
+            eval_dset = VQAFeatureDatasetEnd2End('val', dictionary, filter_pair=False)
+        else:
+            raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
+            
+        print '> data loaded. time: %.2fs' % (time.time() - start)
+
+        constructor = 'build_%s' % args.model
+        model = getattr(base_model, constructor)(train_dset, args.num_hid, args).cuda()
+        model.w_emb.init_embedding('data/glove6b_init_300d.npy')
+        model = nn.DataParallel(model).cuda()
+
+        train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
+        eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
+
         train(model, train_loader, eval_loader, args)
-    elif args.task == 'measure':
-        measure(model, train_loader, eval_loader, args)
+
+    elif args.task == 'test':
+
+        torch.backends.cudnn.benchmark = True
+
+        start = time.time()
+        batch_size = args.batch_size
+
+        dictionary = Dictionary.load_from_file('data/dictionary.pkl')
+        test_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
+            
+        print '> data loaded. time: %.2fs' % (time.time() - start)
+
+        constructor = 'build_%s' % args.model
+        model = getattr(base_model, constructor)(None, args.num_hid, args).cuda()
+        model.w_emb.init_embedding('data/glove6b_init_300d.npy')
+        model = nn.DataParallel(model).cuda()
+
+        test_loader = DataLoader(test_dset, batch_size, shuffle=False, num_workers=1)
+
+        measure(model, test_loader, args)
