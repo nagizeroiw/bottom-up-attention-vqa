@@ -83,6 +83,9 @@ class BaseModel(nn.Module):
 
         logits = self.classifier(joint_repr)  # answer (answer probabilities) [2 * batch, n_answers]
 
+        if not self.seen_back2normal_shape:
+            self.see(logits, 'logits')
+
         if with_pair_loss:
 
             ### no pair_loss (but use pair-wise training)
