@@ -46,8 +46,8 @@ num_fixed_boxes = 36
 
 
 if __name__ == '__main__':
-    h_train = h5py.File(train_data_file, "w")
-    h_val = h5py.File(val_data_file, "w")
+    # h_train = h5py.File(train_data_file, "w")
+    # h_val = h5py.File(val_data_file, "w")
     h_test = h5py.File(test_data_file, "w")
 
     if os.path.exists(train_ids_file) and os.path.exists(val_ids_file) and os.path.exists(test_ids_file):
@@ -57,16 +57,17 @@ if __name__ == '__main__':
     else:
         train_imgids = utils.load_imageid('data/images/train2014')
         val_imgids = utils.load_imageid('data/images/val2014')
-        test_imgids = []
-        # test_imgids = utils.load_imageid('data/images/test2015')
+        # test_imgids = []
+        test_imgids = utils.load_imageid('data/images/test2015')
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
-        # cPickle.dump(test_imgids, open(test_ids_file, 'wb'))
+        cPickle.dump(test_imgids, open(test_ids_file, 'wb'))
 
     train_indices = {}
     val_indices = {}
     test_indices = {}
 
+    '''
     train_img_features = h_train.create_dataset(
         'image_features', (len(train_imgids), num_fixed_boxes, feature_length), 'f')
     train_img_bb = h_train.create_dataset(
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         'image_features', (len(val_imgids), num_fixed_boxes, feature_length), 'f')
     val_spatial_img_features = h_val.create_dataset(
         'spatial_features', (len(val_imgids), num_fixed_boxes, 6), 'f')
-
+    '''
 
     test_img_bb = h_test.create_dataset(
         'image_bb', (len(test_imgids), num_fixed_boxes, 4), 'f')
@@ -213,11 +214,14 @@ if __name__ == '__main__':
 
     if len(test_imgids) != 0:
         print('Warning: test_image_ids is not empty')
-
+    '''
     cPickle.dump(train_indices, open(train_indices_file, 'wb'))
     cPickle.dump(val_indices, open(val_indices_file, 'wb'))
+    '''
     cPickle.dump(test_indices, open(test_indices_file, 'wb'))
+    '''
     h_train.close()
     h_val.close()
+    '''
     h_test.close()
     print("done!")
