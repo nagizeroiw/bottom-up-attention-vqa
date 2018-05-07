@@ -94,8 +94,6 @@ def measure(model, test_loader, args):
             assert int(qid[k]) not in all_results
             all_results[int(qid[k])] = label2ans[int(logits[k])]
 
-        break
-
     results = []
     for qid, ans in all_results.iteritems():
         results.append({
@@ -127,7 +125,7 @@ def train(model, train_loader, eval_loader, args):
         total_pair_loss = 0
         total_raw_pair_loss = 0
         t = time.time()
-        
+
         logger.write(model_setting(args))
         logger.write(str(args))
 
