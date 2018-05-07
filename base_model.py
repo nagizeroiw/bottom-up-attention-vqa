@@ -225,10 +225,10 @@ class BaseModel(nn.Module):
                 pair_loss_1 = (pair_loss_1 + self.gamma).clamp(min=0.)
                 pair_loss_2 = (pair_loss_2 + self.gamma).clamp(min=0.)
 
-                self.seen_back2normal_shape = True
+                
                 raw_pair_loss = (pair_loss_1 + pair_loss_2).mean(dim=0)
                 pair_loss = self.pair_loss_weight * raw_pair_loss
-
+        self.seen_back2normal_shape = True
         if with_pair_loss:
             return logits, pair_loss, raw_pair_loss
         return logits, None, None
