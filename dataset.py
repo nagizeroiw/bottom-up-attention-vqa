@@ -74,7 +74,7 @@ def _create_entry(img, question, answer):
     entry = {
         'question_id' : question['question_id'],
         'image_id'    : question['image_id'],
-        'image'       : img,  # idx for hdf5 file
+        'image'       : img,  # idx for hdf5 file, or true image file name
         'question'    : question['question'],
         'answer'      : answer}
     return entry
@@ -125,6 +125,7 @@ class VQAFeatureDataset(Dataset):
         print('!filter_pair', filter_pair)
         super(VQAFeatureDataset, self).__init__()
         assert name in ['train', 'val']
+        self.name = name
 
         ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
         label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
@@ -165,7 +166,7 @@ class VQAFeatureDataset(Dataset):
         else:
             print('> load all questions.')
             cpair_qids = None
-        self.entries, self.qid2eid = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
+        self.entries, _, __ = _load_dataset(dataroot, name, self.img_id2idx, cpair_qids)
         print('> self.entries loaded %d questions.' % len(self.entries))
 
 
