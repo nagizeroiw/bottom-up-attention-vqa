@@ -1,4 +1,5 @@
 data
+*.json
 *.pyc
 *.ipynb
 logs/
