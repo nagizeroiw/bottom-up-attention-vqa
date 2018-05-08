@@ -101,7 +101,7 @@ def seek(model, test_loader, args):
         print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
 
         for k in xrange(36):
-            print('- region $%d' % k):
+            print('- region $%d' % k)
             print('  ', att[k].item())
             print('  ', b[k].data)
             print('------------')
