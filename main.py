@@ -13,7 +13,7 @@ import utils
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, default='train', help='train|test')
+    parser.add_argument('--task', type=str, default='train', help='train|test|test-dev|seek-train|seek-valid|seek-test')
     parser.add_argument('--epochs', type=int, default=40)
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0_newatt')
@@ -107,6 +107,29 @@ if __name__ == '__main__':
 
         start = time.time()
         batch_size = args.batch_size
+
+        dictionary = Dictionary.load_from_file('data/dictionary.pkl')
+        test_dset = VQAFeatureDataset(args.task, dictionary, filter_pair=False)
+            
+        print '> data loaded. time: %.2fs' % (time.time() - start)
+
+        constructor = 'build_%s' % args.model
+        model = getattr(base_model, constructor)(test_dset, args.num_hid, args).cuda()
+        model.w_emb.init_embedding('data/glove6b_init_300d.npy')
+        model = nn.DataParallel(model).cuda()
+
+        test_loader = DataLoader(test_dset, batch_size, shuffle=False, num_workers=1)
+
+        measure(model, test_loader, args)
+
+    elif args.task.startswith('seek'):
+
+        split = args.task.split('-')[1]
+
+        torch.backends.cudnn.benchmark = True
+
+        start = time.time()
+        batch_size = 1
 
         dictionary = Dictionary.load_from_file('data/dictionary.pkl')
         test_dset = VQAFeatureDataset(args.task, dictionary, filter_pair=False)

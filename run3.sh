@@ -6,8 +6,8 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --pair_loss_weight 0 \
     --pair_loss_type @att \
     --gamma 2.5 \
-    --model stackdualatt \
+    --model dualatt \
     --stackatt_nlayers 3 \
-    --train_dataset all \
+    --train_dataset all&pair \
     --test_dataset all \
     --seed 5293
