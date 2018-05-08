@@ -177,7 +177,7 @@ def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
 
 
 class VQAFeatureDataset(Dataset):
-    def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
+    def __init__(self, name, dictionary, dataroot='data', filter_pair=True, preloaded=None):
         print('!filter_pair', filter_pair)
         super(VQAFeatureDataset, self).__init__()
         assert name in ['train', 'val', 'test', 'test-dev']
@@ -209,13 +209,18 @@ class VQAFeatureDataset(Dataset):
                 cpair_qids.add(qid2)
             print('complementary pairs list covers %d questions.' % len(cpair_qids))
 
-        print('> loading features from h5 file')
-        h5_path = os.path.join(dataroot, '%s36.hdf5' % self.name)
-        with h5py.File(h5_path, 'r') as hf:
-            # self.features = np.array(hf.get('image_features'))
-            # self.spatials = np.array(hf.get('spatial_features'))
-            self.features = hf.get('image_features')[:]
-            self.spatials = hf.get('spatial_features')[:]
+        if preloaded is None:
+            print('> loading features from h5 file')
+            h5_path = os.path.join(dataroot, '%s36.hdf5' % self.name)
+            with h5py.File(h5_path, 'r') as hf:
+                # self.features = np.array(hf.get('image_features'))
+                # self.spatials = np.array(hf.get('spatial_features'))
+                self.features = hf.get('image_features')[:]
+                self.spatials = hf.get('spatial_features')[:]
+        else:
+            print('> using preloaded features')
+            self.features, self.spatials = preloaded
+
         print('> features.shape', self.features.shape)
         # train (82783, 36, 2048), val (40504, 36, 2048), test (81434, 36, 2048)
         print('> spatials.shape', self.spatials.shape)
@@ -235,6 +240,9 @@ class VQAFeatureDataset(Dataset):
         print('> features and labels loaded.')
 
         self.seen_pshape = False
+
+    def pre_loaded(self):
+        return (self.features, self.spatials)
 
     def training(self):
         if self.name in ('train', 'val'):
