@@ -68,6 +68,12 @@ def compute_score_with_logits(logits, labels):
 
 def seek(model, test_loader, args):
 
+    image_path = {
+        'train': 'train2014/COCO_train2014_000000',
+        'val': 'valid2014/COCO_valid2014_000000',
+        'test': 'test2015/COCO_test2015_000000'
+    }
+
     # load from start_with
     assert args.start_with is not None
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
@@ -86,6 +92,11 @@ def seek(model, test_loader, args):
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
         print(logits.size())
         print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+
+        iid = int(qid[0]) / 1000
+        image_file_name = image_path[test_loader.dataset.name] + '%06d.jpg' % iid
+        print('image file name: %s' % image_file_name)
+
 
 
 def measure(model, test_loader, args):

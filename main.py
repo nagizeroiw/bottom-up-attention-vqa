@@ -69,6 +69,7 @@ if __name__ == '__main__':
         elif args.train_dataset == 'all_pair':
             train_dset_all = VQAFeatureDataset('train', dictionary, filter_pair=False)
             train_dset_pair = VQAFeatureDatasetWithPair('train', dictionary)
+            train_dset = train_dset_all  # for model building: dset.vdim and co.
         else:
             raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
 
