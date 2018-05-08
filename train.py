@@ -8,6 +8,9 @@ from progressbar import ProgressBar
 import json
 import cPickle
 
+import matplotlib
+import matplotlib.pyplot as plt
+
 seen_loss_shape = False
 
 try:
@@ -74,6 +77,10 @@ def seek(model, test_loader, args):
         'test': 'test2015/COCO_test2015_000000'
     }
 
+    image_root = './data/images/'
+
+    split = test_loader.dataset.name
+
     # load from start_with
     assert args.start_with is not None
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
@@ -94,9 +101,18 @@ def seek(model, test_loader, args):
         print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
 
         iid = int(qid[0]) / 1000
-        image_file_name = image_path[test_loader.dataset.name] + '%06d.jpg' % iid
+        image_file_name = image_path[split] + '%06d.jpg' % iid
         print('image file name: %s' % image_file_name)
 
+        with open(os.path.join(image_root, image_file_name)) as image_fp:
+            image = plt.imread(image_fp)
+
+        print(image.shape)
+        fig, ax = plt.subplots()
+        ax.imshow(image)
+        plt.savefig('figure.png')
+
+        break  # only observe one datapoint
 
 
 def measure(model, test_loader, args):
