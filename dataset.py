@@ -177,13 +177,15 @@ def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
 
 
 class VQAFeatureDataset(Dataset):
-    def __init__(self, name, dictionary, dataroot='data', filter_pair=True, preloaded=None):
+    def __init__(self, name, dictionary, dataroot='data', filter_pair=True, preloaded=None, is_test=False):
         print('!filter_pair', filter_pair)
         super(VQAFeatureDataset, self).__init__()
         assert name in ['train', 'val', 'test', 'test-dev']
         self.name = name
         if self.name == 'test-dev':
             self.name = 'test'
+
+        self.is_test = is_test
 
         ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
         label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
@@ -247,10 +249,7 @@ class VQAFeatureDataset(Dataset):
         return (self.features, self.spatials)
 
     def training(self):
-        if self.name in ('train', 'val'):
-            return True
-        else:
-            return False
+        return self.is_test
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
