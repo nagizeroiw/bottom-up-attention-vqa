@@ -66,6 +66,28 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
+def seek(model, test_loader, args):
+
+    # load from start_with
+    assert args.start_with is not None
+    model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
+    model.train(False)
+
+    label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
+    label2ans = cPickle.load(open(label2ans_file, 'rb'))
+
+    for i, (v, b, q, qid) in enumerate(test_loader):
+        v = Variable(v).cuda()
+        b = Variable(b).cuda()
+        q = Variable(q).cuda()
+        qid = Variable(qid).cuda()
+
+        pred, att = model(v, b, q, qid)
+        logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
+        print(logits.size())
+        print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+
+
 def measure(model, test_loader, args):
 
     # load from start_with

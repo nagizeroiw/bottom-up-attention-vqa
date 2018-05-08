@@ -134,8 +134,12 @@ def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
     dataroot: root path of dataset
     name: 'train', 'val'
     """
-    question_path = os.path.join(
-        dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
+    if name in ('train', 'val'):
+        question_path = os.path.join(
+            dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
+    else:
+        question_path = os.path.join(
+            dataroot, 'v2_OpenEnded_mscoco_test2015_questions.json')
     questions = sorted(json.load(open(question_path))['questions'],
                        key=lambda x: x['question_id'])
     answer_path = os.path.join(dataroot, 'cache', '%s_target.pkl' % name)

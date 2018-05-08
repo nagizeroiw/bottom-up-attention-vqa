@@ -40,6 +40,32 @@ class BaseModel(nn.Module):
         if not self.seen_back2normal_shape:
             print(name, var.size())
 
+    def seek(self, v, b, q, labels):
+        """Seek attention map
+
+        v: [batch, num_objs(36), obj_dim(2048)]
+        b: [batch, num_objs(36), b_dim(6)]
+        q: [batch, seq_length(14)]
+        labels: [batch, 2, n_ans(3129)]
+
+        return: logits,          (batch, n_answers)
+                att_weights,     (batch, num_objs)
+        """
+
+        w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
+        q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
+
+        att = self.v_att(v, q_emb)  # attention weight [batch, num_objs]
+        v_emb = (att * v).sum(1)  # attended feature vector [batch, obj_dim]
+
+        q_repr = self.q_net(q_emb)  # question representation [batch, num_hid]
+        v_repr = self.v_net(v_emb)  # image representation [batch, num_hid]
+        joint_repr = q_repr * v_repr  # joint embedding (joint representation) [batch, num_hid]
+
+        logits = self.classifier(joint_repr)  # answer (answer probabilities) [batch, n_answers]
+
+        return logits, att
+
     def forward(self, v, b, q, labels):
         """Forward
 
@@ -63,18 +89,11 @@ class BaseModel(nn.Module):
         else:
             with_pair_loss = False
 
-        '''
-        if not self.seen_back2normal_shape:
-            print('v', v.size())
-            print('b', b.size())
-            print('q', q.size())
-            self.seen_back2normal_shape = True
-        '''
 
         w_emb = self.w_emb(q)  # preprocess question [2 * batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [2 * batch, q_dim]
 
-        att = self.v_att(v, q_emb)  # attention weight [2 * batch, num_objs, obj_dim]
+        att = self.v_att(v, q_emb)  # attention weight [2 * batch, num_objs]
         v_emb = (att * v).sum(1)  # attended feature vector [2 * batch, obj_dim]
 
         q_repr = self.q_net(q_emb)  # question representation [2 * batch, num_hid]
@@ -406,6 +425,23 @@ def build_stackatt(dataset, num_hid, args):
     v_att1 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
     v_att2 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
     v_att3 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    q_net = FCNet([q_emb.num_hid, num_hid])
+    v_net = FCNet([dataset.v_dim, num_hid])
+    query_net = FCNet([dataset.v_dim, num_hid])
+
+    classifier = SimpleClassifier(
+        num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
+
+    model = BaseModelStackAtt(w_emb, q_emb, (v_att1, v_att2, v_att3), q_net, v_net, query_net, classifier, args)
+    return model
+
+
+def build_stackdualatt(dataset, num_hid, args):
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
+    q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
+    v_att1 = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    v_att2 = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    v_att3 = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
