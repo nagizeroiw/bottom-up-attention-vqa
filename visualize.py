@@ -7,7 +7,8 @@ data_root = './data/'
 
 questions_file = {
     'train': 'v2_OpenEnded_mscoco_train2014_questions.json',
-    'valid': 'v2_OpenEnded_mscoco_val2014_questions.json'
+    'valid': 'v2_OpenEnded_mscoco_val2014_questions.json',
+    'test': 'v2_OpenEnded_mscoco_test2015_questions.json'
 }
 
 annotations_file = {
@@ -22,40 +23,46 @@ complementary_pairs_file = {
 
 image_path = {
     'train': 'train2014/COCO_train2014_000000',
-    'valid': 'val2014/COCO_val2014_000000'
+    'valid': 'val2014/COCO_val2014_000000',
+    'test': 'test2015/COCO_test2015_000000'
 }
 
 
 def check(split):
     questions = json.load(open(os.path.join(data_root, questions_file[split])))['questions']
-    annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
+    if split != 'test':
+        annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
 
     qid2ques = {}
-    qid2ans = {}
     for q in questions:
         qid = q['question_id']
+        image_id = q['image_id']
         ques = q['question']
-        qid2ques[qid] = ques
-    for a in annotations:
-        qid = a['question_id']
-        image_id = a['image_id']
-        ans = a['multiple_choice_answer']
-        qid2ans[qid] = (image_id, ans)
+        qid2ques[qid] = (image_id, ques)
+
+    if split != 'test':
+        qid2ans = {}
+        for a in annotations:
+            qid = a['question_id']
+            image_id = a['image_id']
+            ans = a['multiple_choice_answer']
+            qid2ans[qid] = (image_id, ans)
 
     while True:
         qid = raw_input('> ')
         qid = int(qid)
-        if qid not in qid2ans:
+        if qid not in qid2ques:
             print('! cannot find question id: %s' % qid)
             continue
-        image_id, ans = qid2ans[qid]
+        image_id, ques = qid2ques[qid]
 
         file_name = image_path[split] + '%06d.jpg' % int(image_id)
         print('file name:', file_name)
         os.system('scp %s ./vis/' % ('jungpu6:~/vqa-butd/data/images/%s' % file_name))
         print('    image_id: %s' % image_id)
-        print('    question: %s' % qid2ques[qid])
-        print('    ans: %s' % ans)
+        print('    question: %s' % ques)
+        if split != 'test':
+            print('    ans: %s' % qid2ans[qid][1])
 
 def process(split):
     questions = json.load(open(os.path.join(data_root, questions_file[split])))['questions']

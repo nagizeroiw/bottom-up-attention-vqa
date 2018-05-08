@@ -114,7 +114,6 @@ def measure(model, test_loader, args):
 
         pred, _, __ = model(v, b, q, qid)
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
-        print(logits.size())
 
         if i % disp_freq == 0:
             print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
