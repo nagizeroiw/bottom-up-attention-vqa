@@ -8,6 +8,6 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --gamma 2.5 \
     --model dualatt \
     --stackatt_nlayers 3 \
-    --train_dataset all&pair \
+    --train_dataset all_pair \
     --test_dataset all \
     --seed 5293
