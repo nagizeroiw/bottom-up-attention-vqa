@@ -92,8 +92,10 @@ def measure(model, test_loader, args):
 
     # load from start_with
     assert args.start_with is not None
+    print('> loading saved model from %s...' % os.path.join(args.start_with, 'model.pth'))
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
     model.train(False)
+    print('> model loaded')
 
     label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
     label2ans = cPickle.load(open(label2ans_file, 'rb'))
@@ -101,6 +103,8 @@ def measure(model, test_loader, args):
     all_results = {}
 
     print('> total questions: %d' % len(test_loader.dataset))
+
+    disp_freq = len(test_loader) / 200
 
     for i, (v, b, q, qid) in enumerate(test_loader):
         v = Variable(v).cuda()
@@ -111,8 +115,12 @@ def measure(model, test_loader, args):
         pred, _, __ = model(v, b, q, qid)
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
         print(logits.size())
+
+        if i % disp_freq == 0:
+            print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+
         for k in range(logits.size()[0]):
-            print(int(qid[k]), int(logits[k]), label2ans[int(logits[k])])
+            # print(int(qid[k]), int(logits[k]), label2ans[int(logits[k])])
             assert int(qid[k]) not in all_results
             all_results[int(qid[k])] = label2ans[int(logits[k])]
 
