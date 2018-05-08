@@ -210,6 +210,7 @@ class VQAFeatureDataset(Dataset):
             print('complementary pairs list covers %d questions.' % len(cpair_qids))
 
         if preloaded is None:
+            self.preloaded = False
             print('> loading features from h5 file')
             h5_path = os.path.join(dataroot, '%s36.hdf5' % self.name)
             with h5py.File(h5_path, 'r') as hf:
@@ -218,6 +219,7 @@ class VQAFeatureDataset(Dataset):
                 self.features = hf.get('image_features')[:]
                 self.spatials = hf.get('spatial_features')[:]
         else:
+            self.preloaded = True
             print('> using preloaded features')
             self.features, self.spatials = preloaded
 
@@ -267,8 +269,9 @@ class VQAFeatureDataset(Dataset):
             entry['q_token'] = tokens
 
     def tensorize(self):
-        self.features = torch.from_numpy(self.features)
-        self.spatials = torch.from_numpy(self.spatials)
+        if self.preloaded is False:
+            self.features = torch.from_numpy(self.features)
+            self.spatials = torch.from_numpy(self.spatials)
 
         seen_shape = False
 
