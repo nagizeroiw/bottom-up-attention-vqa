@@ -87,8 +87,12 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
     dataroot: root path of dataset
     name: 'train', 'val'
     """
-    question_path = os.path.join(
-        dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
+    if name in ('train', 'val'):
+        question_path = os.path.join(
+            dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
+    else:
+        question_path = os.path.join(
+            dataroot, 'v2_OpenEnded_mscoco_test2015_questions.json')
     questions = sorted(json.load(open(question_path))['questions'],
                        key=lambda x: x['question_id'])
     try:
@@ -210,9 +214,8 @@ class VQAFeatureDataset(Dataset):
             self.features = hf.get('image_features')[:]
             self.spatials = hf.get('spatial_features')[:]
         print('> features.shape', self.features.shape)
-        # train (82783, 36, 2048), val (40504, 36, 2048)
+        # train (82783, 36, 2048), val (40504, 36, 2048), test (81434, 36, 2048)
         print('> spatials.shape', self.spatials.shape)
-        # train (82783, 36, 6), val (40504, 36, 6)
         if filter_pair is True:
             print('> only load questions that are included in complementary pairs list.')
         else:
