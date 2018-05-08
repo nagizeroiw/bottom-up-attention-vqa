@@ -67,6 +67,8 @@ if __name__ == '__main__':
     val_indices = {}
     test_indices = {}
 
+    print('> len(test_imgids): %d' % len(test_imgids))
+
     '''
     train_img_features = h_train.create_dataset(
         'image_features', (len(train_imgids), num_fixed_boxes, feature_length), 'f')

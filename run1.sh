@@ -7,7 +7,6 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --pair_loss_type @att \
     --gamma 2.5 \
     --model dualatt \
-    --stackatt_nlayers 2 \
-    --train_dataset filter \
+    --train_dataset all \
     --test_dataset all \
-    --seed 1919
+    --seed 5293
