@@ -7,7 +7,7 @@ import numpy as np
 
 from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End
 import base_model
-from train import train, measure
+from train import train, measure, seek
 import utils
 
 
@@ -146,4 +146,4 @@ if __name__ == '__main__':
 
         test_loader = DataLoader(test_dset, batch_size, shuffle=False, num_workers=1)
 
-        measure(model, test_loader, args)
+        seek(model, test_loader, args)
