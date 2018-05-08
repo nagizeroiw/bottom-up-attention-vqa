@@ -129,10 +129,21 @@ def train(model, train_loader, eval_loader, args):
         logger.write(model_setting(args))
         logger.write(str(args))
 
-        bar = ProgressBar(maxval=len(train_loader))
+        # all&pair
+        try:
+            train_loader_all, train_loader_pair = train_loader
+            if epoch % 2 == 0:
+                dataloader = train_loader_all
+            else:
+                dataloader = train_loader_pair
+            print('> all & pairwise training')
+        except:
+            dataloader = train_loader
+
+        bar = ProgressBar(maxval=len(dataloader))
         bar.start()
 
-        for i, items in enumerate(train_loader):
+        for i, items in enumerate(dataloader):
             '''
                 v:features (b, 2, 36, 2048) -> image features (represented by 36 top objects / salient regions)
                 b:spatials (b, 2, 36, 6) -> spatial features (() of 36 top objects)
@@ -175,10 +186,10 @@ def train(model, train_loader, eval_loader, args):
 
         bar.finish()
 
-        total_loss /= train_loader.dataset.loss_len()
-        total_pair_loss /= train_loader.dataset.loss_len()
-        total_raw_pair_loss /= train_loader.dataset.loss_len()
-        train_score = 100 * train_score / train_loader.dataset.loss_len()
+        total_loss /= dataloader.dataset.loss_len()
+        total_pair_loss /= dataloader.dataset.loss_len()
+        total_raw_pair_loss /= dataloader.dataset.loss_len()
+        train_score = 100 * train_score / dataloader.dataset.loss_len()
 
         train_time = time.time()
 

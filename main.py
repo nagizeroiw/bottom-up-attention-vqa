@@ -34,7 +34,7 @@ def parse_args():
 
     parser.add_argument('--stackatt_nlayers', type=int, default=1, help='1|2|3')
 
-    parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
+    parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end|all&pair')
     parser.add_argument('--test_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
 
     args = parser.parse_args()
@@ -66,6 +66,9 @@ if __name__ == '__main__':
             train_dset = VQAFeatureDatasetWithPair('train', dictionary)
         elif args.train_dataset == 'end2end':
             train_dset = VQAFeatureDatasetEnd2End('train', dictionary, filter_pair=False)
+        elif args.train_dataset == 'all&pair':
+            train_dset_all = VQAFeatureDataset('train', dictionary, filter_pair=False)
+            train_dset_pair = VQAFeatureDatasetWithPair('train', dictionary)
         else:
             raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
 
@@ -88,7 +91,12 @@ if __name__ == '__main__':
         model.w_emb.init_embedding('data/glove6b_init_300d.npy')
         model = nn.DataParallel(model).cuda()
 
-        train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
+        if args.train_dataset == 'all&pair':
+            train_loader_all = DataLoader(train_dset_all, train_batch, shuffle=True, num_workers=1)
+            train_loader_pair = DataLoader(train_dset_pair, train_batch / 2, shuffle=True, num_workers=1)
+            train_loader = (train_loader_all, train_loader_pair)
+        else:
+            train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
         eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
 
         train(model, train_loader, eval_loader, args)
