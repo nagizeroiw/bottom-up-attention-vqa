@@ -102,9 +102,10 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
     except:
         answers = None
 
-    utils.assert_eq(len(questions), len(answers))
-    entries = []
+    if answers is not None:
+        utils.assert_eq(len(questions), len(answers))
 
+    entries = []
     qid2eid = {}
 
     if answers is not None:  # train / val
