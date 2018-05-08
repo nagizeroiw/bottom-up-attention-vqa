@@ -163,9 +163,10 @@ def train(model, train_loader, eval_loader, args):
             train_loader_all, train_loader_pair = train_loader
             if epoch % 2 == 0:
                 dataloader = train_loader_all
+                print('> training with all')
             else:
                 dataloader = train_loader_pair
-            print('> all & pairwise training')
+                print('> training with pairwise')
         except:
             dataloader = train_loader
 
