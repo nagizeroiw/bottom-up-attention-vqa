@@ -180,8 +180,10 @@ class VQAFeatureDataset(Dataset):
     def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
         print('!filter_pair', filter_pair)
         super(VQAFeatureDataset, self).__init__()
-        assert name in ['train', 'val', 'test']
+        assert name in ['train', 'val', 'test', 'test-dev']
         self.name = name
+        if self.name == 'test-dev':
+            self.name = 'test'
 
         ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
         label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
@@ -193,7 +195,7 @@ class VQAFeatureDataset(Dataset):
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
-            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
+            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % self.name)))
 
         if self.training():
             print('> loading complementary pairs file')
@@ -208,7 +210,7 @@ class VQAFeatureDataset(Dataset):
             print('complementary pairs list covers %d questions.' % len(cpair_qids))
 
         print('> loading features from h5 file')
-        h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
+        h5_path = os.path.join(dataroot, '%s36.hdf5' % self.name)
         with h5py.File(h5_path, 'r') as hf:
             # self.features = np.array(hf.get('image_features'))
             # self.spatials = np.array(hf.get('spatial_features'))

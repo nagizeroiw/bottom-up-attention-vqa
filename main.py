@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
         train(model, train_loader, eval_loader, args)
 
-    elif args.task == 'test':
+    elif args.task.startswith('test'):
 
         torch.backends.cudnn.benchmark = True
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         batch_size = args.batch_size
 
         dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-        test_dset = VQAFeatureDataset('test', dictionary, filter_pair=False)
+        test_dset = VQAFeatureDataset(args.task, dictionary, filter_pair=False)
             
         print '> data loaded. time: %.2fs' % (time.time() - start)
 
