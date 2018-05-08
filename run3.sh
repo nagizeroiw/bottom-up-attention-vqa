@@ -1,4 +1,4 @@
-ID=stackatt3_all
+ID=dualatt_all_pair
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=3 python main.py \
     --output saved_models/$ID \
