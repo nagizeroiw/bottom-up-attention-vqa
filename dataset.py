@@ -325,8 +325,8 @@ class VQAFeatureDataset(Dataset):
 
 class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
-    def __init__(self, name, dictionary, dataroot='data'):
-            super(VQAFeatureDatasetWithPair, self).__init__(name, dictionary, dataroot, filter_pair=True)
+    def __init__(self, name, dictionary, dataroot='data', preloaded=None):
+            super(VQAFeatureDatasetWithPair, self).__init__(name, dictionary, dataroot, filter_pair=True, preloaded=preloaded)
 
     def __getitem__(self, index):
         qid1, qid2 = self.pairs[index]
