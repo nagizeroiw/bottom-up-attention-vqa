@@ -127,13 +127,15 @@ if __name__ == '__main__':
 
         split = args.task.split('-')[1]
 
+        print('> seek on split %s' % split)
+
         torch.backends.cudnn.benchmark = True
 
         start = time.time()
         batch_size = 1
 
         dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-        test_dset = VQAFeatureDataset(args.task, dictionary, filter_pair=False)
+        test_dset = VQAFeatureDataset(split, dictionary, filter_pair=False)
             
         print '> data loaded. time: %.2fs' % (time.time() - start)
 
