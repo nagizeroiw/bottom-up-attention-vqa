@@ -127,6 +127,10 @@ if __name__ == '__main__':
 
     elif args.task.startswith('seek'):
 
+        print(args.seek_output)
+
+        exit()
+
         split = args.task.split('-')[1]
         question_id = args.seek_qid
 
