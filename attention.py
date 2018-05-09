@@ -93,6 +93,11 @@ class DualAttention(nn.Module):
         w2 = nn.functional.softmax(logits2, dim=1)
         return w1 + w2
 
+    def keep_prob(self, v, q):
+        logits = self.logits(v, q)
+        p = nn.functional.sigmoid(logits)
+        return p
+
     def logits(self, v, q):
         batch, k, _ = v.size()
 
