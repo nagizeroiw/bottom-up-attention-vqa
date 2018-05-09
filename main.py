@@ -4,10 +4,9 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import numpy as np
-
-from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End
 import base_model
 from train import train, measure, seek
+from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End
 import utils
 
 
