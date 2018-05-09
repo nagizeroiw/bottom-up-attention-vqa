@@ -103,8 +103,8 @@ def seek(model, test_loader, args):
 
         for k in xrange(36):
             print('- region #%d' % k)
-            print(att[k].data)
-            print(b[k].data)
+            print(att[0, k].data)
+            print(b[0, k].data)
             print('------------')
 
         iid = int(qid[0]) / 1000
