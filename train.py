@@ -195,12 +195,12 @@ def train(model, train_loader, eval_loader, args):
         # all&pair
         try:
             train_loader_all, train_loader_pair = train_loader
-            if epoch % 2 == 0:
-                dataloader = train_loader_all
-                print('> training with all')
-            else:
+            if epoch % 4 == 0:
                 dataloader = train_loader_pair
                 print('> training with pairwise')
+            else:
+                dataloader = train_loader_all
+                print('> training with all')
         except:
             dataloader = train_loader
 
