@@ -274,10 +274,14 @@ class VQAFeatureDataset(Dataset):
         for entry in self.entries:
             question = np.array(entry['q_token'])
             if not seen_shape:
-                print('> question.shape', question.shape)
+                # print('> question.shape', question.shape)
                 seen_shape = True
             question = torch.from_numpy(question)
             entry['q_token'] = question
+
+            question_id = np.array(entry['question_id'])
+            question_id = torch.from_numpy(question_id)
+            entry['question_id'] = question_id
 
             if self.training():
                 answer = entry['answer']
