@@ -9,7 +9,9 @@ import json
 import cPickle
 
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 seen_loss_shape = False
 
@@ -69,57 +71,68 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
-def seek(model, test_loader, args):
+def seek(model, test_set, args, split, question_id):
 
     image_path = {
         'train': 'train2014/COCO_train2014_000000',
-        'val': 'valid2014/COCO_valid2014_000000',
+        'val': 'val2014/COCO_val2014_000000',
         'test': 'test2015/COCO_test2015_000000'
     }
 
     image_root = './data/images/'
 
-    split = test_loader.dataset.name
-
     # load from start_with
     assert args.start_with is not None
+    print('> loading saved model from %s...' % os.path.join(args.start_with, 'model.pth'))
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
     model.train(False)
+    print('> model loaded')
 
     label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
     label2ans = cPickle.load(open(label2ans_file, 'rb'))
 
-    for i, (v, b, q, qid) in enumerate(test_loader):
-        v = Variable(v).cuda()
-        b = Variable(b).cuda()
-        q = Variable(q).cuda()
-        qid = Variable(qid).cuda()
+    v, b, q, qid = test_set.get_qid_minibatch(question_id)
+    v = Variable(v).cuda()
+    b = Variable(b).cuda()
+    q = Variable(q).cuda()
+    qid = Variable(qid).cuda()
 
-        pred, att = model.seek(v, b, q, qid)
-        print('pred', pred.size())
-        logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
-        print('logits', logits.size())
-        print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+    pred, att = model.module.seek(v, b, q, qid)
+    logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
+    print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
 
-        for k in xrange(36):
-            print('- region $%d' % k)
-            print('  ', att[k].item())
-            print('  ', b[k].data)
-            print('------------')
+    iid = int(qid[0]) / 1000
+    image_file_name = image_path[split] + '%06d.jpg' % iid
+    print('image file name: %s' % image_file_name)
+    # something like (375, 500, 3)
 
-        iid = int(qid[0]) / 1000
-        image_file_name = image_path[split] + '%06d.jpg' % iid
-        print('image file name: %s' % image_file_name)
+    with open(os.path.join(image_root, image_file_name)) as image_fp:
+        image = plt.imread(image_fp)
 
-        with open(os.path.join(image_root, image_file_name)) as image_fp:
-            image = plt.imread(image_fp)
+    print('image shape', image.shape)
+    h, w, _ = image.shape
 
-        print(image.shape)
-        fig, ax = plt.subplots()
-        ax.imshow(image)
-        plt.savefig('figure.png')
+    fig, ax = plt.subplots()
+    ax.imshow(image)
 
-        break  # only observe one datapoint
+    for k in xrange(36):
+
+        weight = att[0, k].data[0]
+
+        x1, y1, x2, y2, dx, dy = b[0, k].data
+
+        x1, dx = x1 * w, dx * w
+        y1, dy = y1 * h, dy * h
+
+        rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=min(1, weight))
+        
+        if weight >= 0.1:
+            plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
+
+        # Add the patch to the Axes
+        ax.add_patch(rect)
+
+    plt.savefig('figure.png')
 
 
 def measure(model, test_loader, args):
@@ -195,7 +208,7 @@ def train(model, train_loader, eval_loader, args):
         # all&pair
         try:
             train_loader_all, train_loader_pair = train_loader
-            if epoch % 4 == 0:
+            if epoch % 5 == 0:
                 dataloader = train_loader_pair
                 print('> training with pairwise')
             else:

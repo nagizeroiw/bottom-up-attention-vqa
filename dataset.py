@@ -6,7 +6,6 @@ import numpy as np
 import utils
 import h5py
 import torch
-import random
 from torch.utils.data import Dataset
 import skimage.io
 from skimage.transform import resize
@@ -110,7 +109,6 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
     if answers is not None:  # train / val
         qa_pairs = zip(questions, answers)
-        random.shuffle(qa_pairs)
 
         for question, answer in qa_pairs:
             utils.assert_eq(question['question_id'], answer['question_id'])
@@ -158,7 +156,6 @@ def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
     img2val = {}
 
     qa_pairs = zip(questions, answers)
-    random.shuffle(qa_pairs)
 
     for question, answer in qa_pairs:
         utils.assert_eq(question['question_id'], answer['question_id'])
@@ -199,7 +196,7 @@ class VQAFeatureDataset(Dataset):
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % self.name)))
 
-        if self.training():
+        if name in ('train', 'val'):
             print('> loading complementary pairs file')
             self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
             # train 200394 pairs, valid 95144 pairs
@@ -277,10 +274,14 @@ class VQAFeatureDataset(Dataset):
         for entry in self.entries:
             question = np.array(entry['q_token'])
             if not seen_shape:
-                print('> question.shape', question.shape)
+                # print('> question.shape', question.shape)
                 seen_shape = True
             question = torch.from_numpy(question)
             entry['q_token'] = question
+
+            question_id = np.array(entry['question_id'])
+            question_id = torch.from_numpy(question_id)
+            entry['question_id'] = question_id
 
             if self.training():
                 answer = entry['answer']
@@ -294,6 +295,35 @@ class VQAFeatureDataset(Dataset):
                 else:
                     entry['answer']['labels'] = None
                     entry['answer']['scores'] = None
+
+    def get_qid_minibatch(self, qid):
+        entry = self.entries[self.qid2eid[qid]]
+        features = self.features[entry['image']]
+        spatials = self.spatials[entry['image']]
+        question = entry['q_token']
+        question_id = entry['question_id']
+
+        if self.training():
+            answer = entry['answer']
+            labels = answer['labels']
+            scores = answer['scores']
+            target = torch.zeros(self.num_ans_candidates)
+            if labels is not None:
+                target.scatter_(0, labels, scores)
+
+            features = features.unsqueeze(0)
+            spatials = spatials.unsqueeze(0)
+            question = question.unsqueeze(0)
+            target = target.unsqueeze(0)
+
+            return features, spatials, question, target
+        else:
+
+            features = features.unsqueeze(0)
+            spatials = spatials.unsqueeze(0)
+            question = question.unsqueeze(0)
+            question_id = question_id.unsqueeze(0)
+            return features, spatials, question, question_id
 
     def __getitem__(self, index):
         entry = self.entries[index]
