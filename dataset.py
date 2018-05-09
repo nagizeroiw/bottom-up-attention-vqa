@@ -249,7 +249,7 @@ class VQAFeatureDataset(Dataset):
         return (self.features, self.spatials)
 
     def training(self):
-        return self.is_test
+        return not self.is_test
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
