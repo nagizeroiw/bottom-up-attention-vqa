@@ -71,7 +71,7 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
-def seek(model, test_loader, args):
+def seek(model, test_set, args, split, question_id):
 
     image_path = {
         'train': 'train2014/COCO_train2014_000000',
@@ -81,8 +81,6 @@ def seek(model, test_loader, args):
 
     image_root = './data/images/'
 
-    split = test_loader.dataset.name
-
     # load from start_with
     assert args.start_with is not None
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
@@ -91,50 +89,48 @@ def seek(model, test_loader, args):
     label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
     label2ans = cPickle.load(open(label2ans_file, 'rb'))
 
-    for i, (v, b, q, qid) in enumerate(test_loader):
-        v = Variable(v).cuda()
-        b = Variable(b).cuda()
-        q = Variable(q).cuda()
-        qid = Variable(qid).cuda()
+    v, b, q, qid = test_set.get_qid_minibatch(question_id)
+    v = Variable(v).cuda()
+    b = Variable(b).cuda()
+    q = Variable(q).cuda()
+    qid = Variable(qid).cuda()
 
-        pred, att = model.module.seek(v, b, q, qid)
-        logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
-        print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+    pred, att = model.module.seek(v, b, q, qid)
+    logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
+    print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
 
-        iid = int(qid[0]) / 1000
-        image_file_name = image_path[split] + '%06d.jpg' % iid
-        print('image file name: %s' % image_file_name)
-        # something like (375, 500, 3)
+    iid = int(qid[0]) / 1000
+    image_file_name = image_path[split] + '%06d.jpg' % iid
+    print('image file name: %s' % image_file_name)
+    # something like (375, 500, 3)
 
-        with open(os.path.join(image_root, image_file_name)) as image_fp:
-            image = plt.imread(image_fp)
+    with open(os.path.join(image_root, image_file_name)) as image_fp:
+        image = plt.imread(image_fp)
 
-        print('image shape', image.shape)
-        h, w, _ = image.shape
+    print('image shape', image.shape)
+    h, w, _ = image.shape
 
-        fig, ax = plt.subplots()
-        ax.imshow(image)
+    fig, ax = plt.subplots()
+    ax.imshow(image)
 
-        for k in xrange(36):
+    for k in xrange(36):
 
-            weight = att[0, k].data[0]
+        weight = att[0, k].data[0]
 
-            x1, y1, x2, y2, dx, dy = b[0, k].data
+        x1, y1, x2, y2, dx, dy = b[0, k].data
 
-            x1, dx = x1 * w, dx * w
-            y1, dy = y1 * h, dy * h
+        x1, dx = x1 * w, dx * w
+        y1, dy = y1 * h, dy * h
 
-            rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=min(1, weight))
-            
-            if weight >= 0.1:
-                plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
+        rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=min(1, weight))
+        
+        if weight >= 0.1:
+            plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
 
-            # Add the patch to the Axes
-            ax.add_patch(rect)
+        # Add the patch to the Axes
+        ax.add_patch(rect)
 
-        plt.savefig('figure.png')
-
-        break  # only observe one datapoint
+    plt.savefig('figure.png')
 
 
 def measure(model, test_loader, args):

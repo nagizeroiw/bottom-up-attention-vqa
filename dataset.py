@@ -292,6 +292,35 @@ class VQAFeatureDataset(Dataset):
                     entry['answer']['labels'] = None
                     entry['answer']['scores'] = None
 
+    def get_qid_minibatch(self, qid):
+        entry = self.entries[self.qid2eid[qid]]
+        features = self.features[entry['image']]
+        spatials = self.spatials[entry['image']]
+        question = entry['q_token']
+        question_id = entry['question_id']
+
+        if self.training():
+            answer = entry['answer']
+            labels = answer['labels']
+            scores = answer['scores']
+            target = torch.zeros(self.num_ans_candidates)
+            if labels is not None:
+                target.scatter_(0, labels, scores)
+
+            features = features.unsqueeze(0)
+            spatials = spatials.unsqueeze(0)
+            question = question.unsqueeze(0)
+            target = target.unsqueeze(0)
+
+            return features, spatials, question, target
+        else:
+
+            features = features.unsqueeze(0)
+            spatials = spatials.unsqueeze(0)
+            question = question.unsqueeze(0)
+            question_id = question_id.unsqueeze(0)
+            return features, spatials, question, question_id
+
     def __getitem__(self, index):
         entry = self.entries[index]
         features = self.features[entry['image']]

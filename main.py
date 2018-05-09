@@ -36,6 +36,8 @@ def parse_args():
     parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end|all_pair')
     parser.add_argument('--test_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
 
+    parser.add_argument('--seek_qid', type=int, default=42001, help='question_id for seek')
+
     args = parser.parse_args()
     return args
 
@@ -125,6 +127,7 @@ if __name__ == '__main__':
     elif args.task.startswith('seek'):
 
         split = args.task.split('-')[1]
+        question_id = args.seek_qid
 
         print('> seek on split %s' % split)
 
@@ -143,6 +146,4 @@ if __name__ == '__main__':
         model.w_emb.init_embedding('data/glove6b_init_300d.npy')
         model = nn.DataParallel(model).cuda()
 
-        test_loader = DataLoader(test_dset, batch_size, shuffle=False, num_workers=1)
-
-        seek(model, test_loader, args)
+        seek(model, test_dset, args, split, question_id)
