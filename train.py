@@ -95,7 +95,7 @@ def seek(model, test_loader, args):
         q = Variable(q).cuda()
         qid = Variable(qid).cuda()
 
-        pred, att = model.seek(v, b, q, qid)
+        pred, att = model.module.seek(v, b, q, qid)
         print('pred', pred.size())
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
         print('logits', logits.size())

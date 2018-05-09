@@ -142,7 +142,7 @@ if __name__ == '__main__':
         constructor = 'build_%s' % args.model
         model = getattr(base_model, constructor)(test_dset, args.num_hid, args).cuda()
         model.w_emb.init_embedding('data/glove6b_init_300d.npy')
-        model = model.cuda()
+        model = nn.DataParallel(model).cuda()
 
         test_loader = DataLoader(test_dset, batch_size, shuffle=False, num_workers=1)
 
