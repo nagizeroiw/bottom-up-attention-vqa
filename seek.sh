@@ -6,7 +6,7 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --model dualatt \
     --task seek-val \
     --seek_qid $QID1 \
-    --seek_output '$QID1_filter.png' \
+    --seek_output $QID1'_filter.png' \
     --start_with saved_models/dualatt_filter \
     --seed 5293
 
