@@ -94,8 +94,8 @@ class DualAttention(nn.Module):
         return w1 + w2
 
     def keep_prob(self, v, q):
-        logits = self.logits(v, q)
-        p = nn.functional.sigmoid(logits)
+        logits1, logits2 = self.logits(v, q)
+        p = nn.functional.sigmoid(logits1 + logits2)
         return p
 
     def logits(self, v, q):
