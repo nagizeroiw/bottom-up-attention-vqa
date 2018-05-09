@@ -6,7 +6,6 @@ import numpy as np
 import utils
 import h5py
 import torch
-import random
 from torch.utils.data import Dataset
 import skimage.io
 from skimage.transform import resize
@@ -110,7 +109,6 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
     if answers is not None:  # train / val
         qa_pairs = zip(questions, answers)
-        random.shuffle(qa_pairs)
 
         for question, answer in qa_pairs:
             utils.assert_eq(question['question_id'], answer['question_id'])
