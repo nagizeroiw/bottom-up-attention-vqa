@@ -196,7 +196,7 @@ class VQAFeatureDataset(Dataset):
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % self.name)))
 
-        if self.training():
+        if name in ('train', 'val'):
             print('> loading complementary pairs file')
             self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
             # train 200394 pairs, valid 95144 pairs
