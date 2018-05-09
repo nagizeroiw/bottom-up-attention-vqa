@@ -132,7 +132,7 @@ def seek(model, test_set, args, split, question_id):
         # Add the patch to the Axes
         ax.add_patch(rect)
 
-    plt.savefig('figure.png')
+    plt.savefig(args.seek_output)
 
 
 def measure(model, test_loader, args):

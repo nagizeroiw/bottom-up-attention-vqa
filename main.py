@@ -37,6 +37,7 @@ def parse_args():
     parser.add_argument('--test_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
 
     parser.add_argument('--seek_qid', type=int, default=42001, help='question_id for seek')
+    parser.add_argument('--seek_output', type=str, default='figure.png', help='output png file for seek')
 
     args = parser.parse_args()
     return args
