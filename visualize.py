@@ -71,12 +71,16 @@ def process(split):
 
     print('> from spilt %s:' % split)
 
+    pair = random.choice(pairs)
+    q_id_1, q_id_2 = pair
+    '''
     q_id_1 = int(raw_input('> '))
     print('> finding pair containing %d...' % q_id_1)
     for pair in pairs:
         if q_id_1 in pair:
             q_id_1, q_id_2 = pair
             break
+    '''
 
     print('> question id pair: (%d, %d)' % (q_id_1, q_id_2))
 
