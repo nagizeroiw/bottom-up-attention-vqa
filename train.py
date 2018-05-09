@@ -9,8 +9,9 @@ import json
 import cPickle
 
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 seen_loss_shape = False
 
@@ -100,12 +101,6 @@ def seek(model, test_loader, args):
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
         print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
 
-        for k in xrange(36):
-            print('- region #%d' % k)
-            print(att[0, k].data)
-            print(b[0, k].data)
-            print('------------')
-
         iid = int(qid[0]) / 1000
         image_file_name = image_path[split] + '%06d.jpg' % iid
         print('image file name: %s' % image_file_name)
@@ -114,9 +109,29 @@ def seek(model, test_loader, args):
         with open(os.path.join(image_root, image_file_name)) as image_fp:
             image = plt.imread(image_fp)
 
-        print(image.shape)
+        print('image shape', image.shape)
+        h, w, _ = image.shape
+
         fig, ax = plt.subplots()
         ax.imshow(image)
+
+        for k in xrange(36):
+
+            weight = att[0, k].data[0]
+
+            x1, y1, x2, y2, dx, dy = b[0, k].data
+
+            x1, dx = x1 * w, dx * w
+            y1, dy = y1 * h, dy * h
+
+            rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=weight)
+            
+            if weight >= 0.1:
+                plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
+
+            # Add the patch to the Axes
+            ax.add_patch(rect)
+
         plt.savefig('figure.png')
 
         break  # only observe one datapoint
