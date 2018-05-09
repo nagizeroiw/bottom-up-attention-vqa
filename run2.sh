@@ -1,6 +1,6 @@
-ID=stackatt2_all
+ID=stackdualatt2_all
 rm -r saved_models/$ID
-CUDA_VISIBLE_DEVICES=2 python main.py \
+CUDA_VISIBLE_DEVICES=3 python main.py \
     --output saved_models/$ID \
     --epochs 40 \
     --pair_loss_weight 0 \
