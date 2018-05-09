@@ -132,6 +132,7 @@ def seek(model, test_set, args, split, question_id):
         # Add the patch to the Axes
         ax.add_patch(rect)
 
+    print('> saving image to %s...' % args.seek_output)
     plt.savefig(args.seek_output)
 
 
