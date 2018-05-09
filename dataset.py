@@ -158,7 +158,6 @@ def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
     img2val = {}
 
     qa_pairs = zip(questions, answers)
-    random.shuffle(qa_pairs)
 
     for question, answer in qa_pairs:
         utils.assert_eq(question['question_id'], answer['question_id'])
