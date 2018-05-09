@@ -1,5 +1,7 @@
 data
 *.json
+*.png
+*.jpg
 *.pyc
 *.ipynb
 logs/

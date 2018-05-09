@@ -9,6 +9,7 @@ import json
 import cPickle
 
 import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 seen_loss_shape = False
@@ -73,7 +74,7 @@ def seek(model, test_loader, args):
 
     image_path = {
         'train': 'train2014/COCO_train2014_000000',
-        'val': 'valid2014/COCO_valid2014_000000',
+        'val': 'val2014/COCO_val2014_000000',
         'test': 'test2015/COCO_test2015_000000'
     }
 
@@ -96,9 +97,7 @@ def seek(model, test_loader, args):
         qid = Variable(qid).cuda()
 
         pred, att = model.module.seek(v, b, q, qid)
-        print('pred', pred.size())
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
-        print('logits', logits.size())
         print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
 
         for k in xrange(36):
@@ -110,6 +109,7 @@ def seek(model, test_loader, args):
         iid = int(qid[0]) / 1000
         image_file_name = image_path[split] + '%06d.jpg' % iid
         print('image file name: %s' % image_file_name)
+        # something like (375, 500, 3)
 
         with open(os.path.join(image_root, image_file_name)) as image_fp:
             image = plt.imread(image_fp)
