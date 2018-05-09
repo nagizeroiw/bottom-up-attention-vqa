@@ -124,7 +124,7 @@ def seek(model, test_loader, args):
             x1, dx = x1 * w, dx * w
             y1, dy = y1 * h, dy * h
 
-            rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=weight)
+            rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=min(1, weight))
             
             if weight >= 0.1:
                 plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
