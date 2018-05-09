@@ -83,8 +83,10 @@ def seek(model, test_set, args, split, question_id):
 
     # load from start_with
     assert args.start_with is not None
+    print('> loading saved model from %s...' % os.path.join(args.start_with, 'model.pth'))
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
     model.train(False)
+    print('> model loaded')
 
     label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
     label2ans = cPickle.load(open(label2ans_file, 'rb'))
