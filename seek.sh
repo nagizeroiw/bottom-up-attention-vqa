@@ -42,7 +42,7 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --model dualatt \
     --task seek-val \
     --seek_qid $QID1 \
-    --seek_output $QID1'_pairwise.png' \
+    --seek_output $QID1'_ploss.png' \
     --start_with saved_models/dualatt_ploss \
     --seed 5293
     
@@ -51,7 +51,7 @@ CUDA_VISIBLE_DEVICES=3 python main.py \
     --model dualatt \
     --task seek-val \
     --seek_qid $QID2 \
-    --seek_output $QID2'_pairwise.png' \
+    --seek_output $QID2'_ploss.png' \
     --start_with saved_models/dualatt_ploss \
     --seed 5293
     
