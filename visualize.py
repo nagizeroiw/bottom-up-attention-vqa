@@ -64,6 +64,53 @@ def check(split):
         if split != 'test':
             print('    ans: %s' % qid2ans[qid][1])
 
+
+def count(split):
+    pairs = json.load(open(os.path.join(data_root, complementary_pairs_file[split])))
+    questions = json.load(open(os.path.join(data_root, questions_file[split])))['questions']
+    annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
+
+    qid2ques = {}
+    for q in questions:
+        qid = q['question_id']
+        image_id = q['image_id']
+        ques = q['question']
+        qid2ques[qid] = (image_id, ques)
+
+    if split != 'test':
+        qid2ans = {}
+        for a in annotations:
+            qid = a['question_id']
+            image_id = a['image_id']
+            ans = a['multiple_choice_answer']
+            qid2ans[qid] = (image_id, ans)
+
+    clean_pairs = []
+    clean_pairs_filename = 'clean_pairs_%s.json' % split
+
+    print('counting...')
+    count = 0
+    for p1, p2 in pairs:
+        ans1 = qid2ans[p1][1]
+        ans2 = qid2ans[p2][1]
+        ques1 = qid2ques[p1][1]
+        ques2 = qid2ques[p2][1]
+        try:
+            assert ques1 == ques2
+        except:
+            print('! different same question: %d %d' % (p1, p2))
+        
+        if ans1 == ans2:
+            count += 1
+        else:
+            clean_pairs.append((p1, p2))
+
+    print('same answer: %d' % count)
+    print('ratio: %.4f' % (1.0 * count / len(pairs)))
+    print('clean pairs length: %d' % len(clean_pairs))
+    json.dump(clean_pairs, open(clean_pairs_filename, 'w'))
+
+
 def process(split):
     questions = json.load(open(os.path.join(data_root, questions_file[split])))['questions']
     annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
@@ -124,4 +171,4 @@ if __name__ == '__main__':
         split = sys.argv[1]
     except KeyError:
         split = 'valid'
-    process(split)
+    count(split)

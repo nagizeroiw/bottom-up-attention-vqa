@@ -115,8 +115,9 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
             utils.assert_eq(question['image_id'], answer['image_id'])
 
             # only load questions that are included in complementary pairs list.
-            if cpair_qids is not None and question['question_id'] not in cpair_qids:
-                continue
+            if cpair_qids is not None:
+                if question['question_id'] not in cpair_qids:
+                    continue
 
             img_id = question['image_id']
             entries.append(_create_entry(img_id2val[img_id], question, answer))
@@ -162,8 +163,10 @@ def _load_dataset_end2end(dataroot, name, img_id2val, cpair_qids=None):
         utils.assert_eq(question['image_id'], answer['image_id'])
 
         # only load questions that are included in complementary pairs list.
-        if cpair_qids is not None and question['question_id'] not in cpair_qids:
-            continue
+
+        if cpair_qids is not None:
+            if question['question_id'] not in cpair_qids:
+                continue
 
         img_id = question['image_id']
         entries.append(_create_entry(img_id2val[img_id], question, answer))
@@ -198,7 +201,10 @@ class VQAFeatureDataset(Dataset):
 
         if name in ('train', 'val'):
             print('> loading complementary pairs file')
-            self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+            # self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+
+            ######## clean pairs
+            self.pairs = json.load(open(os.path.join(dataroot, 'clean_pairs_%s.json' % name), 'r'))
             # train 200394 pairs, valid 95144 pairs
             # train 443757 questions, valid 214354 questions
 
