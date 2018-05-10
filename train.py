@@ -132,8 +132,7 @@ def seek(model, test_set, args, split, question_id):
         # Add the patch to the Axes
         ax.add_patch(rect)
 
-    plt.text(0, 0, 'Model: %s' % args.start_with, verticalalignment='top', horizontalalignment='left', color='black')
-    plt.text(0, 10, 'Answer: %s' % label2ans[int(logits[0])], verticalalignment='top', horizontalalignment='left', color='black')
+    plt.xlabel('%s -> %s' % (args.start_with.split('/')[1], label2ans[int(logits[0])]))
 
     print('> saving image to %s...' % args.seek_output)
     plt.savefig(args.seek_output)
