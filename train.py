@@ -209,7 +209,7 @@ def train(model, train_loader, eval_loader, args):
         # all&pair
         try:
             train_loader_all, train_loader_pair = train_loader
-            if epoch > 20:
+            if epoch > args.all_pair_d:
                 dataloader = train_loader_pair
                 print('> training with pairwise')
             else:
