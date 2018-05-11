@@ -339,17 +339,17 @@ def evaluate(model, dataloader, args):
         loss_len += v.size(0) * 2
         try:
             score += batch_score.item()
-            print('batch score, %.2f' % batch_score.item())
+            print('batch score: %.2f | pred.size(0):%.1f' % (batch_score.item(), pred.size(0)))
         except:
             score += batch_score
-            print('batch score, %.2f' % batch_score)
+            print('batch score: %.2f || pred.size(0): %.1f' % (batch_score, pred.size(0)))
         num_data += pred.size(0)
         if pair_loss is not None:
             total_pair_loss += pair_loss.item() * v.size(0) * 2
         if raw_pair_loss is not None:
             total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
 
-    total_pair_loss /= num_data
+    total_pair_loss /= loss_len
     total_raw_pair_loss /= loss_len
-    score = score / loss_len
+    score = score / num_data
     return score, total_pair_loss, total_raw_pair_loss
