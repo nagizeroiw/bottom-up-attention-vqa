@@ -223,6 +223,8 @@ def train(model, train_loader, eval_loader, args):
         bar = ProgressBar(maxval=len(dataloader))
         bar.start()
 
+        loss_len = 0.
+
         for i, items in enumerate(dataloader):
             '''
                 v:features (b, 2, 36, 2048) -> image features (represented by 36 top objects / salient regions)
@@ -252,8 +254,10 @@ def train(model, train_loader, eval_loader, args):
 
             batch_score = compute_score_with_logits(pred, a).sum()
             if pair_loss is None:
+                loss_len += v.size(0)
                 total_loss += loss.item() * v.size(0)
             else:  # v.dim() == 4
+                loss_len += v.size(0) * 2
                 total_loss += loss.item() * v.size(0) * 2
                 total_pair_loss += pair_loss.item() * v.size(0) * 2
                 total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
@@ -266,10 +270,10 @@ def train(model, train_loader, eval_loader, args):
 
         bar.finish()
 
-        total_loss /= dataloader.dataset.loss_len()
-        total_pair_loss /= dataloader.dataset.loss_len()
-        total_raw_pair_loss /= dataloader.dataset.loss_len()
-        train_score = 100 * train_score / dataloader.dataset.loss_len()
+        total_loss /= loss_len
+        total_pair_loss /= loss_len
+        total_raw_pair_loss /= loss_len
+        train_score = 100 * train_score / loss_len
 
         train_time = time.time()
 
@@ -307,6 +311,7 @@ def evaluate(model, dataloader, args):
     num_data = 0
     total_pair_loss = 0
     total_raw_pair_loss = 0
+    loss_len = 0.
     for items in iter(dataloader):
 
         if args.test_dataset == 'end2end':
@@ -332,11 +337,13 @@ def evaluate(model, dataloader, args):
             score += batch_score
         num_data += pred.size(0)
         if pair_loss is not None:
+            loss_len += v.size(0) * 2
             total_pair_loss += pair_loss.item() * v.size(0) * 2
         if raw_pair_loss is not None:
+            loss_len += v.size(0) * 2
             total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
 
-    total_pair_loss /= dataloader.dataset.loss_len()
-    total_raw_pair_loss /= dataloader.dataset.loss_len()
-    score = score / dataloader.dataset.loss_len()
+    total_pair_loss /= loss_len
+    total_raw_pair_loss /= loss_len
+    score = score / loss_len
     return score, total_pair_loss, total_raw_pair_loss

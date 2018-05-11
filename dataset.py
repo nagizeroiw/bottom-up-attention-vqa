@@ -361,8 +361,6 @@ class VQAFeatureDataset(Dataset):
     def __len__(self):
         return len(self.entries)
 
-    def loss_len(self):
-        return len(self.entries)
 
 class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
@@ -400,10 +398,6 @@ class VQAFeatureDatasetWithPair(VQAFeatureDataset):
     def __len__(self):
         # return len(self.entries)
         return len(self.pairs)
-
-    def loss_len(self):
-        return 2. * len(self.pairs)
-
 
 
 class VQAFeatureDatasetAllPair(VQAFeatureDataset):
@@ -464,57 +458,38 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
         if index < len(self.pairs):
             qid1, qid2 = self.pairs[index]
             ent1, ent2 = self.entries[self.qid2eid[qid1]], self.entries[self.qid2eid[qid2]]
-            features1, features2 = self.features[ent1['image']], self.features[ent2['image']]
-            spatials1, spatials2 = self.spatials[ent1['image']], self.spatials[ent2['image']]
-
-            question1, question2 = ent1['q_token'], ent2['q_token']
-            answer1, answer2 = ent1['answer'], ent2['answer']
-            labels1, labels2 = answer1['labels'], answer2['labels']
-            scores1, scores2 = answer1['scores'], answer2['scores']
-            target1, target2 = torch.zeros(self.num_ans_candidates), torch.zeros(self.num_ans_candidates)
-            if labels1 is not None:
-                target1.scatter_(0, labels1, scores1)
-            if labels2 is not None:
-                target2.scatter_(0, labels2, scores2)
-
-            p_features = torch.stack([features1, features2], dim=0)
-            p_spatials = torch.stack([spatials1, spatials2], dim=0)
-            p_question = torch.stack([question1, question2], dim=0)
-            p_target = torch.stack([target1, target2], dim=0)
-
-            # p_features (2, 36, 2048)
-            # p_spatials (2, 36, 6)
-            # p_question (2, 14)
-            # p_target (2, 3129)
-            return p_features, p_spatials, p_question, p_target
         else:
-            index = index - len(self.pairs)
-            entry = self.entries[index]
-            features = self.features[entry['image']]
-            spatials = self.spatials[entry['image']]
-            question = entry['q_token']
+            ind1 = (index - len(self.pairs)) / 2
+            ind2 = ind1 + 1
+            ent1, ent2 = self.entries[ind1], self.entries[ind2]
 
-            answer = entry['answer']
-            labels = answer['labels']
-            scores = answer['scores']
-            target = torch.zeros(self.num_ans_candidates)
-            if labels is not None:
-                target.scatter_(0, labels, scores)
+        features1, features2 = self.features[ent1['image']], self.features[ent2['image']]
+        spatials1, spatials2 = self.spatials[ent1['image']], self.spatials[ent2['image']]
 
-            features = features.unsqueeze(0)
-            spatials = spatials.unsqueeze(0)
-            question = question.unsqueeze(0)
-            target = target.unsqueeze(0)
+        question1, question2 = ent1['q_token'], ent2['q_token']
+        answer1, answer2 = ent1['answer'], ent2['answer']
+        labels1, labels2 = answer1['labels'], answer2['labels']
+        scores1, scores2 = answer1['scores'], answer2['scores']
+        target1, target2 = torch.zeros(self.num_ans_candidates), torch.zeros(self.num_ans_candidates)
+        if labels1 is not None:
+            target1.scatter_(0, labels1, scores1)
+        if labels2 is not None:
+            target2.scatter_(0, labels2, scores2)
 
-            return features, spatials, question, target
-       
+        p_features = torch.stack([features1, features2], dim=0)
+        p_spatials = torch.stack([spatials1, spatials2], dim=0)
+        p_question = torch.stack([question1, question2], dim=0)
+        p_target = torch.stack([target1, target2], dim=0)
 
+        # p_features (2, 36, 2048)
+        # p_spatials (2, 36, 6)
+        # p_question (2, 14)
+        # p_target (2, 3129)
+        return p_features, p_spatials, p_question, p_target
     def __len__(self):
         # return len(self.entries)
-        return len(self.pairs) + len(self.entries2)
+        return len(self.pairs) + len(self.entries2) / 2 - 1
 
-    def loss_len(self):
-        return 2. * len(self.pairs) + len(self.entries2)
 
 
 class VQAFeatureDatasetEnd2End(Dataset):
