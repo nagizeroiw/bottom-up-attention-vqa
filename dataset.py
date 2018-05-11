@@ -486,6 +486,7 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
         # p_question (2, 14)
         # p_target (2, 3129)
         return p_features, p_spatials, p_question, p_target
+
     def __len__(self):
         # return len(self.entries)
         return len(self.pairs) + len(self.entries2) / 2 - 1

@@ -74,6 +74,7 @@ if __name__ == '__main__':
             train_dset_pair = VQAFeatureDatasetWithPair('train', dictionary, preloaded=train_dset_all.pre_loaded())
             train_dset = train_dset_all  # for model building: dset.vdim and co.
         elif args.train_dataset == 'allpair':
+            train_batch = batch_size / 2
             train_dset = VQAFeatureDatasetAllPair('train', dictionary)
         else:
             raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
@@ -101,8 +102,6 @@ if __name__ == '__main__':
             train_loader_all = DataLoader(train_dset_all, train_batch, shuffle=True, num_workers=1)
             train_loader_pair = DataLoader(train_dset_pair, train_batch / 2, shuffle=True, num_workers=1)
             train_loader = (train_loader_all, train_loader_pair)
-        elif args.train_dataset == 'alpair':
-            train_loader = DataLoader(train_dset, train_batch, shuffle=False, num_workers=1)
         else:
             train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
         eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
