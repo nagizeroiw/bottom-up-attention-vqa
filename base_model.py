@@ -66,7 +66,7 @@ class BaseModel(nn.Module):
 
         return logits, att
 
-    def forward(self, v, b, q, labels):
+    def forward(self, v, b, q, labels, force_without_ploss=False):
         """Forward
 
         v: [batch, 2, num_objs(36), obj_dim(2048)]
@@ -87,6 +87,9 @@ class BaseModel(nn.Module):
             q = q.view(-1, seq_length)  # (2 * batch, seq_length)
             with_pair_loss = True
         else:
+            with_pair_loss = False
+
+        if force_without_ploss:
             with_pair_loss = False
 
 
@@ -276,7 +279,7 @@ class BaseModelStackAtt(nn.Module):
         if not self.seen_back2normal_shape:
             print(name, var.size())
 
-    def forward(self, v, b, q, labels):
+    def forward(self, v, b, q, labels, force_without_ploss=False):
         """Forward
 
         v: [batch, 2, num_objs(36), obj_dim(2048)]
@@ -286,6 +289,7 @@ class BaseModelStackAtt(nn.Module):
 
         return: logits, not probs
         """
+
 
         if v.dim() == 4:  # handle pair loss
             batch, _, num_objs, obj_dim = v.size()
@@ -299,6 +303,8 @@ class BaseModelStackAtt(nn.Module):
         else:
             with_pair_loss = False
 
+        if force_without_ploss:
+            with_pair_loss = False
 
         w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]

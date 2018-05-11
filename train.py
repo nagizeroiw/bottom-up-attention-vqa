@@ -238,6 +238,13 @@ def train(model, train_loader, eval_loader, args):
                 q = Variable(q).cuda()
                 a = Variable(a).cuda()
                 pred, pair_loss, raw_pair_loss = model(v, q, a)
+            elif args.train_dataset == 'allpair':
+                v, b, q, a = items
+                v = Variable(v).cuda()
+                b = Variable(b).cuda()
+                q = Variable(q).cuda()
+                a = Variable(a).cuda()
+                pred, pair_loss, raw_pair_loss = model(v, b, q, a, force_without_ploss=True)
             else:
                 v, b, q, a = items
                 v = Variable(v).cuda()
@@ -253,15 +260,13 @@ def train(model, train_loader, eval_loader, args):
             optim.step()
 
             batch_score = compute_score_with_logits(pred, a).sum()
+            loss_len += pred.size(0)
             if pair_loss is None:
-                loss_len += v.size(0)
-                total_loss += loss.item() * v.size(0)
+                total_loss += loss.item() * pred.size(0)
             else:  # v.dim() == 4
-                loss_len += v.size(0) * 2
-                total_loss += loss.item() * v.size(0) * 2
-                total_pair_loss += pair_loss.item() * v.size(0) * 2
-                total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
-                # print(loss.data[0] * v.size(0) * 2, pair_loss.data[0] * v.size(0))
+                total_loss += loss.item() * pred.size(0)
+                total_pair_loss += pair_loss.item() * pred.size(0)
+                total_raw_pair_loss += raw_pair_loss.item() * pred.size(0)
             try:
                 train_score += batch_score.item()
             except:
