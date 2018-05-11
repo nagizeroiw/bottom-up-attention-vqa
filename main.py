@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 import base_model
 from train import train, measure, seek
-from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End
+from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End, VQAFeatureDatasetAllPair
 import utils
 
 
@@ -33,7 +33,7 @@ def parse_args():
 
     parser.add_argument('--stackatt_nlayers', type=int, default=1, help='1|2|3')
 
-    parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end|all_pair')
+    parser.add_argument('--train_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end|all_pair|allpair')
     parser.add_argument('--test_dataset', type=str, default='pairwise', help='all|filter|pairwise|end2end')
     parser.add_argument('--all_pair_d', type=int, default=20, help='division point of all/pair training')
 
@@ -73,6 +73,8 @@ if __name__ == '__main__':
             train_dset_all = VQAFeatureDataset('train', dictionary, filter_pair=False)
             train_dset_pair = VQAFeatureDatasetWithPair('train', dictionary, preloaded=train_dset_all.pre_loaded())
             train_dset = train_dset_all  # for model building: dset.vdim and co.
+        elif args.train_dataset == 'allpair':
+            train_dset = VQAFeatureDatasetAllPair('train', dictionary, filter_pair=True)
         else:
             raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
 
@@ -99,6 +101,8 @@ if __name__ == '__main__':
             train_loader_all = DataLoader(train_dset_all, train_batch, shuffle=True, num_workers=1)
             train_loader_pair = DataLoader(train_dset_pair, train_batch / 2, shuffle=True, num_workers=1)
             train_loader = (train_loader_all, train_loader_pair)
+        elif args.train_dataset == 'alpair':
+            train_loader = DataLoader(train_dset, train_batch, shuffle=False, num_workers=1)
         else:
             train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
         eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)

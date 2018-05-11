@@ -80,7 +80,7 @@ def _create_entry(img, question, answer):
     return entry
 
 
-def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
+def _load_dataset(dataroot, name, img_id2val, cpair_qids=None, single=False):
     """Load entries
     img_id2val: dict {img_id -> val} val can be used to retrieve image or features
     dataroot: root path of dataset
@@ -116,7 +116,9 @@ def _load_dataset(dataroot, name, img_id2val, cpair_qids=None):
 
             # only load questions that are included in complementary pairs list.
             if cpair_qids is not None:
-                if question['question_id'] not in cpair_qids:
+                if not single and question['question_id'] not in cpair_qids:
+                    continue
+                if single and question['question_id'] in cpair_qids:
                     continue
 
             img_id = question['image_id']
@@ -212,6 +214,7 @@ class VQAFeatureDataset(Dataset):
             for qid1, qid2 in self.pairs:
                 cpair_qids.add(qid1)
                 cpair_qids.add(qid2)
+            self.cpair_qids = cpair_qids
             print('complementary pairs list covers %d questions.' % len(cpair_qids))
 
         if preloaded is None:
@@ -400,6 +403,114 @@ class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
     def loss_len(self):
         return 2. * len(self.pairs)
+
+
+
+class VQAFeatureDatasetAllPair(VQAFeatureDataset):
+
+    def __init__(self, name, dictionary, dataroot='data', preloaded=None):
+            super(VQAFeatureDatasetWithPair, self).__init__(name, dictionary, dataroot, filter_pair=True, preloaded=preloaded)
+
+            self.entries2, self.qid2eid2 = _load_dataset(dataroot, name, self.img_id2idx, self.cpair_qids)
+            print('> non-pair data points: %d' % len(self.entries))
+
+            self.process()
+
+    def process(self):
+        """Tokenizes the questions.
+
+        This will add q_token in each entry of the dataset.
+        -1 represent nil, and should be treated as padding_idx in embedding
+        """
+        max_length = 14
+        for entry in self.entries2:
+            tokens = self.dictionary.tokenize(entry['question'], False)
+            tokens = tokens[:max_length]
+            if len(tokens) < max_length:
+                # Note here we pad in front of the sentence
+                padding = [self.dictionary.padding_idx] * (max_length - len(tokens))
+                tokens = padding + tokens
+            utils.assert_eq(len(tokens), max_length)
+            entry['q_token'] = tokens
+
+        seen_shape = False
+
+        for entry in self.entries2:
+            question = np.array(entry['q_token'])
+            if not seen_shape:
+                # print('> question.shape', question.shape)
+                seen_shape = True
+            question = torch.from_numpy(question)
+            entry['q_token'] = question
+
+            question_id = np.array(entry['question_id'])
+            question_id = torch.from_numpy(question_id)
+            entry['question_id'] = question_id
+
+            if self.training():
+                answer = entry['answer']
+                labels = np.array(answer['labels'])
+                scores = np.array(answer['scores'], dtype=np.float32)
+                if len(labels):
+                    labels = torch.from_numpy(labels)
+                    scores = torch.from_numpy(scores)
+                    entry['answer']['labels'] = labels
+                    entry['answer']['scores'] = scores
+                else:
+                    entry['answer']['labels'] = None
+                    entry['answer']['scores'] = None
+
+    def __getitem__(self, index):
+        if index < len(self.pairs):
+            qid1, qid2 = self.pairs[index]
+            ent1, ent2 = self.entries[self.qid2eid[qid1]], self.entries[self.qid2eid[qid2]]
+            features1, features2 = self.features[ent1['image']], self.features[ent2['image']]
+            spatials1, spatials2 = self.spatials[ent1['image']], self.spatials[ent2['image']]
+
+            question1, question2 = ent1['q_token'], ent2['q_token']
+            answer1, answer2 = ent1['answer'], ent2['answer']
+            labels1, labels2 = answer1['labels'], answer2['labels']
+            scores1, scores2 = answer1['scores'], answer2['scores']
+            target1, target2 = torch.zeros(self.num_ans_candidates), torch.zeros(self.num_ans_candidates)
+            if labels1 is not None:
+                target1.scatter_(0, labels1, scores1)
+            if labels2 is not None:
+                target2.scatter_(0, labels2, scores2)
+
+            p_features = torch.stack([features1, features2], dim=0)
+            p_spatials = torch.stack([spatials1, spatials2], dim=0)
+            p_question = torch.stack([question1, question2], dim=0)
+            p_target = torch.stack([target1, target2], dim=0)
+
+            # p_features (2, 36, 2048)
+            # p_spatials (2, 36, 6)
+            # p_question (2, 14)
+            # p_target (2, 3129)
+            return p_features, p_spatials, p_question, p_target
+        else:
+            index = index - len(self.pairs)
+            entry = self.entries[index]
+            features = self.features[entry['image']]
+            spatials = self.spatials[entry['image']]
+            question = entry['q_token']
+
+            answer = entry['answer']
+            labels = answer['labels']
+            scores = answer['scores']
+            target = torch.zeros(self.num_ans_candidates)
+            if labels is not None:
+                target.scatter_(0, labels, scores)
+
+            return features, spatials, question, target
+       
+
+    def __len__(self):
+        # return len(self.entries)
+        return len(self.pairs) + len(self.entries2)
+
+    def loss_len(self):
+        return 2. * len(self.pairs) + len(self.entries2)
+
 
 class VQAFeatureDatasetEnd2End(Dataset):
     def __init__(self, name, dictionary, dataroot='data', filter_pair=True):
