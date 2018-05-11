@@ -104,7 +104,7 @@ if __name__ == '__main__':
             train_loader = (train_loader_all, train_loader_pair)
         else:
             train_loader = DataLoader(train_dset, train_batch, shuffle=True, num_workers=1)
-        eval_loader =  DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
+        eval_loader = DataLoader(eval_dset, test_batch, shuffle=True, num_workers=1)
 
         train(model, train_loader, eval_loader, args)
 

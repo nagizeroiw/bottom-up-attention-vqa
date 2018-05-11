@@ -342,7 +342,7 @@ def evaluate(model, dataloader, args):
         if raw_pair_loss is not None:
             total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
 
-    total_pair_loss /= loss_len
+    total_pair_loss /= num_data
     total_raw_pair_loss /= loss_len
     score = score / loss_len
     return score, total_pair_loss, total_raw_pair_loss
