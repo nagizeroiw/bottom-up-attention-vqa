@@ -461,7 +461,7 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
         else:
             ind1 = (index - len(self.pairs)) / 2
             ind2 = ind1 + 1
-            ent1, ent2 = self.entries[ind1], self.entries[ind2]
+            ent1, ent2 = self.entries2[ind1], self.entries2[ind2]
 
         features1, features2 = self.features[ent1['image']], self.features[ent2['image']]
         spatials1, spatials2 = self.spatials[ent1['image']], self.spatials[ent2['image']]
@@ -489,7 +489,7 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
 
     def __len__(self):
         # return len(self.entries)
-        return len(self.pairs) + len(self.entries2) / 2 - 1
+        return len(self.pairs) + len(self.entries2) / 2
 
 
 
