@@ -331,16 +331,15 @@ def evaluate(model, dataloader, args):
                 pred, pair_loss, raw_pair_loss = model(v, b, q, a)
 
         batch_score = compute_score_with_logits(pred, a).sum()
+        loss_len += v.size(0) * 2
         try:
             score += batch_score.item()
         except:
             score += batch_score
         num_data += pred.size(0)
         if pair_loss is not None:
-            loss_len += v.size(0) * 2
             total_pair_loss += pair_loss.item() * v.size(0) * 2
         if raw_pair_loss is not None:
-            loss_len += v.size(0) * 2
             total_raw_pair_loss += raw_pair_loss.item() * v.size(0) * 2
 
     total_pair_loss /= loss_len
