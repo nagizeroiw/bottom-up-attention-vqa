@@ -489,7 +489,7 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
 
     def __len__(self):
         # return len(self.entries)
-        return len(self.pairs) + len(self.entries2) / 2
+        return len(self.pairs) + len(self.entries2) / 2 - 1
 
 
 
