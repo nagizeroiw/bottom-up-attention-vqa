@@ -310,7 +310,7 @@ class BaseModelStackAtt(nn.Module):
 
         if self.stackatt_nlayers > 1:
 
-            query2 = self.query_net(v_emb1) * q_emb # 2nd-attention query [batch, q_dim]
+            query2 = torch.cat((v_emb1, q_emb), 2) # 2nd-attention query [batch, q_dim + obj_dim]
             keep2 = self.v_att2.keep_prob(v, query2)
             att2 = nn.functional.softmax(keep1 * keep2, dim=1)
             v_emb2 = (att2 * v).sum(1)  # 2nd-attended feature vector [batch, obj_dim]
@@ -319,7 +319,7 @@ class BaseModelStackAtt(nn.Module):
 
         if self.stackatt_nlayers > 2:
 
-            query3 = self.query_net(v_emb2) * q_emb # 3st-attention query [batch, q_dim]
+            query3 = torch.cat((v_emb2, q_emb), 2) # 3st-attention query [batch, q_dim + obj_dim]
             keep3 = self.v_att3.keep_prob(v, query3)
             att3 = nn.functional.softmax(keep1 * keep2 * keep3, dim=1)
             v_emb3 = (att3 * v).sum(1)
@@ -423,8 +423,8 @@ def build_stackatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
     v_att1 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
-    v_att2 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
-    v_att3 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    v_att2 = NewAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
+    v_att3 = NewAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
@@ -440,8 +440,8 @@ def build_stackdualatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
     v_att1 = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
-    v_att2 = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
-    v_att3 = DualAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
+    v_att2 = DualAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
+    v_att3 = DualAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
