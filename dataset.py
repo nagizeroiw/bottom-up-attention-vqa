@@ -501,6 +501,11 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
             if labels is not None:
                 target.scatter_(0, labels, scores)
 
+            features = features.unsqueeze(0)
+            spatials = spatials.unsqueeze(0)
+            question = question.unsqueeze(0)
+            target = target.unsqueeze(0)
+
             return features, spatials, question, target
        
 
