@@ -409,7 +409,7 @@ class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 class VQAFeatureDatasetAllPair(VQAFeatureDataset):
 
     def __init__(self, name, dictionary, dataroot='data', preloaded=None):
-            super(VQAFeatureDatasetWithPair, self).__init__(name, dictionary, dataroot, filter_pair=True, preloaded=preloaded)
+            super(VQAFeatureDatasetAllPair, self).__init__(name, dictionary, dataroot, filter_pair=True, preloaded=preloaded)
 
             self.entries2, self.qid2eid2 = _load_dataset(dataroot, name, self.img_id2idx, self.cpair_qids)
             print('> non-pair data points: %d' % len(self.entries))
