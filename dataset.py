@@ -203,10 +203,10 @@ class VQAFeatureDataset(Dataset):
 
         if name in ('train', 'val'):
             print('> loading complementary pairs file')
-            # self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
+            self.pairs = json.load(open(os.path.join(dataroot, 'v2_mscoco_%s2014_complementary_pairs.json' % name), 'r'))
 
             ######## clean pairs
-            self.pairs = json.load(open(os.path.join(dataroot, 'clean_pairs_%s.json' % name), 'r'))
+            # self.pairs = json.load(open(os.path.join(dataroot, 'clean_pairs_%s.json' % name), 'r'))
             # train 200394 pairs, valid 95144 pairs
             # train 443757 questions, valid 214354 questions
 
