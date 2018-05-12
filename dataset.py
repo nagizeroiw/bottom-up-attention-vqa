@@ -459,7 +459,7 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
             qid1, qid2 = self.pairs[index]
             ent1, ent2 = self.entries[self.qid2eid[qid1]], self.entries[self.qid2eid[qid2]]
         else:
-            ind1 = (index - len(self.pairs)) / 2
+            ind1 = (index - len(self.pairs)) * 2
             ind2 = ind1 + 1
             ent1, ent2 = self.entries2[ind1], self.entries2[ind2]
 
@@ -489,7 +489,7 @@ class VQAFeatureDatasetAllPair(VQAFeatureDataset):
 
     def __len__(self):
         # return len(self.entries)
-        return len(self.pairs) + len(self.entries2) / 2 - 1
+        return len(self.pairs) + len(self.entries2) / 2
 
 
 
