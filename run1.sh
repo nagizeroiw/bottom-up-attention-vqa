@@ -1,4 +1,4 @@
-ID=dualatt_allpair
+ID=dualatt_pairall_d5
 rm -r saved_models/$ID
 CUDA_VISIBLE_DEVICES=1 python main.py \
     --output saved_models/$ID \
@@ -7,6 +7,6 @@ CUDA_VISIBLE_DEVICES=1 python main.py \
     --pair_loss_type @att \
     --gamma 2.5 \
     --model dualatt \
-    --train_dataset allpair \
+    --train_dataset pair_all \
     --test_dataset all \
     --seed 1234
