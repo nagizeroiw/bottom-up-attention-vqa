@@ -6,7 +6,8 @@ from torch.utils.data import DataLoader
 import numpy as np
 import base_model
 from train import train, measure, seek
-from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair, VQAFeatureDatasetEnd2End, VQAFeatureDatasetAllPair
+from dataset import Dictionary, VQAFeatureDataset, VQAFeatureDatasetWithPair
+from dataset import VQAFeatureDatasetEnd2End, VQAFeatureDatasetAllPair, VQAFeatureDatasetTrainVal
 import utils
 
 
@@ -76,6 +77,8 @@ if __name__ == '__main__':
         elif args.train_dataset == 'allpair':
             train_batch = batch_size / 2
             train_dset = VQAFeatureDatasetAllPair('train', dictionary)
+        elif args.train_dataset == 'trainval':
+            train_dset = VQAFeatureDatasetTrainVal(dictionary)
         else:
             raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
 

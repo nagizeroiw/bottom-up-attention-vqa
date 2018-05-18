@@ -362,6 +362,141 @@ class VQAFeatureDataset(Dataset):
         return len(self.entries)
 
 
+
+class VQAFeatureDatasetTrainVal(Dataset):
+    def __init__(self, dictionary, dataroot='data'):
+        super(VQAFeatureDatasetTrainVal, self).__init__()
+
+        ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
+        label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
+        self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
+        self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
+        self.num_ans_candidates = len(self.ans2label)
+        print('> num_ans_candidates:', self.num_ans_candidates)
+
+        self.dictionary = dictionary
+
+        self.t_img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'train36_imgid2idx.pkl')))
+
+        self.v_img_id2idx = cPickle.load(
+            open(os.path.join(dataroot, 'val36_imgid2idx.pkl')))
+
+        print('> loading train features from h5 file')
+        t_h5_path = os.path.join(dataroot, 'train36.hdf5')
+        with h5py.File(t_h5_path, 'r') as hf:
+            # self.features = np.array(hf.get('image_features'))
+            # self.spatials = np.array(hf.get('spatial_features'))
+            self.t_features = hf.get('image_features')[:]
+            self.t_spatials = hf.get('spatial_features')[:]
+
+        print('> loading train features from h5 file')
+        v_h5_path = os.path.join(dataroot, 'val36.hdf5')
+        with h5py.File(v_h5_path, 'r') as hf:
+            # self.features = np.array(hf.get('image_features'))
+            # self.spatials = np.array(hf.get('spatial_features'))
+            self.v_features = hf.get('image_features')[:]
+            self.v_spatials = hf.get('spatial_features')[:]
+
+        print('> features.shape', self.t_features.shape, self.v_features.shape)
+        # train (82783, 36, 2048), val (40504, 36, 2048), test (81434, 36, 2048)
+        print('> spatials.shape', self.t_spatials.shape, self.v_features.shape)
+
+        self.t_entries, self.t_qid2eid = _load_dataset(dataroot, 'train', self.t_img_id2idx)
+
+        self.v_entries, self.v_qid2eid = _load_dataset(dataroot, 'val', self.v_img_id2idx)
+        print('> self.entries loaded %d + %d questions.' % len(self.entries))
+
+
+        self.tokenize()
+        self.tensorize()
+        self.v_dim = self.t_features.size(2)  # 2048
+        self.s_dim = self.t_spatials.size(2)  # 6
+        print('> features and labels loaded.')
+
+        self.seen_pshape = False
+
+    def tokenize(self, max_length=14):
+        """Tokenizes the questions.
+
+        This will add q_token in each entry of the dataset.
+        -1 represent nil, and should be treated as padding_idx in embedding
+        """
+        def process(entry):
+            tokens = self.dictionary.tokenize(entry['question'], False)
+            tokens = tokens[:max_length]
+            if len(tokens) < max_length:
+                # Note here we pad in front of the sentence
+                padding = [self.dictionary.padding_idx] * (max_length - len(tokens))
+                tokens = padding + tokens
+            utils.assert_eq(len(tokens), max_length)
+            entry['q_token'] = tokens
+
+        for entry in self.t_entries:
+            process(entry)
+        for entry in self.v_entries:
+            process(entry)            
+
+    def tensorize(self):
+        self.t_features = torch.from_numpy(self.t_features)
+        self.t_spatials = torch.from_numpy(self.t_spatials)
+        self.v_features = torch.from_numpy(self.v_features)
+        self.v_spatials = torch.from_numpy(self.v_spatials)
+
+        def process(entry):
+            question = np.array(entry['q_token'])
+            question = torch.from_numpy(question)
+            entry['q_token'] = question
+
+            question_id = np.array(entry['question_id'])
+            question_id = torch.from_numpy(question_id)
+            entry['question_id'] = question_id
+
+            if self.training():
+                answer = entry['answer']
+                labels = np.array(answer['labels'])
+                scores = np.array(answer['scores'], dtype=np.float32)
+                if len(labels):
+                    labels = torch.from_numpy(labels)
+                    scores = torch.from_numpy(scores)
+                    entry['answer']['labels'] = labels
+                    entry['answer']['scores'] = scores
+                else:
+                    entry['answer']['labels'] = None
+                    entry['answer']['scores'] = None
+
+        for entry in self.t_entries:
+            process(entry)
+        for entry in self.v_entries:
+            process(entry)
+
+    def __getitem__(self, index):
+        if index < len(self.t_entries):
+            entry = self.t_entries[index]
+        else:
+            entry = self.v_entries[index - len(self.t_entries)]
+        features = self.features[entry['image']]
+        spatials = self.spatials[entry['image']]
+        question = entry['q_token']
+
+        answer = entry['answer']
+        labels = answer['labels']
+        scores = answer['scores']
+        target = torch.zeros(self.num_ans_candidates)
+        if labels is not None:
+            target.scatter_(0, labels, scores)
+
+        return features, spatials, question, target
+        # features (36, 2048) -> image features (represented by 36 top objects / salient regions)
+        # spatials (36, 6) -> spatial features (() of 36 top objects)
+        # question (14,) -> question sentence sequence (tokenized)
+        # @@train/val: target (3129,) -> answer target (with soft labels)
+        # @@test: question_id (1,) -> question id (integar?)
+
+    def __len__(self):
+        return len(self.t_entries) + len(self.v_entries)
+
+
 class VQAFeatureDatasetWithPair(VQAFeatureDataset):
 
     def __init__(self, name, dictionary, dataroot='data', preloaded=None):
