@@ -452,18 +452,17 @@ class VQAFeatureDatasetTrainVal(Dataset):
             question_id = torch.from_numpy(question_id)
             entry['question_id'] = question_id
 
-            if self.training():
-                answer = entry['answer']
-                labels = np.array(answer['labels'])
-                scores = np.array(answer['scores'], dtype=np.float32)
-                if len(labels):
-                    labels = torch.from_numpy(labels)
-                    scores = torch.from_numpy(scores)
-                    entry['answer']['labels'] = labels
-                    entry['answer']['scores'] = scores
-                else:
-                    entry['answer']['labels'] = None
-                    entry['answer']['scores'] = None
+            answer = entry['answer']
+            labels = np.array(answer['labels'])
+            scores = np.array(answer['scores'], dtype=np.float32)
+            if len(labels):
+                labels = torch.from_numpy(labels)
+                scores = torch.from_numpy(scores)
+                entry['answer']['labels'] = labels
+                entry['answer']['scores'] = scores
+            else:
+                entry['answer']['labels'] = None
+                entry['answer']['scores'] = None
 
         for entry in self.t_entries:
             process(entry)
