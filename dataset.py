@@ -390,7 +390,7 @@ class VQAFeatureDatasetTrainVal(Dataset):
             self.t_features = hf.get('image_features')[:]
             self.t_spatials = hf.get('spatial_features')[:]
 
-        print('> loading train features from h5 file')
+        print('> loading val features from h5 file')
         v_h5_path = os.path.join(dataroot, 'val36.hdf5')
         with h5py.File(v_h5_path, 'r') as hf:
             # self.features = np.array(hf.get('image_features'))
@@ -405,7 +405,7 @@ class VQAFeatureDatasetTrainVal(Dataset):
         self.t_entries, self.t_qid2eid = _load_dataset(dataroot, 'train', self.t_img_id2idx)
 
         self.v_entries, self.v_qid2eid = _load_dataset(dataroot, 'val', self.v_img_id2idx)
-        print('> self.entries loaded %d + %d questions.' % len(self.entries))
+        print('> self.entries loaded %d + %d questions.' % (len(self.t_entries), len(self.v_entries)))
 
 
         self.tokenize()
