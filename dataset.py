@@ -472,10 +472,12 @@ class VQAFeatureDatasetTrainVal(Dataset):
     def __getitem__(self, index):
         if index < len(self.t_entries):
             entry = self.t_entries[index]
+            features = self.t_features[entry['image']]
+            spatials = self.t_spatials[entry['image']]
         else:
             entry = self.v_entries[index - len(self.t_entries)]
-        features = self.features[entry['image']]
-        spatials = self.spatials[entry['image']]
+            features = self.v_features[entry['image']]
+            spatials = self.v_spatials[entry['image']]
         question = entry['q_token']
 
         answer = entry['answer']
