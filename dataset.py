@@ -417,7 +417,7 @@ class VQAFeatureDatasetTrainVal(Dataset):
         self.seen_pshape = False
 
     def val_features(self):
-        return self.v_features
+        return self.v_features, self.v_spatials
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
