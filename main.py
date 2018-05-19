@@ -84,9 +84,9 @@ if __name__ == '__main__':
 
         if args.test_dataset == 'all':
             if args.train_dataset == 'trainval':
-                eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
-            else:
                 eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False, preloaded=train_dset.val_features())
+            else:
+                eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
         elif args.test_dataset == 'filter':
             eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=True)
         elif args.test_dataset == 'pairwise':
