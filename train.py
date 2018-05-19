@@ -179,7 +179,10 @@ def measure(model, test_loader, args):
             'question_id': qid,
             'answer': ans
             })
-    with open('results.json', 'w') as fp:
+    test_output = args.test_output
+    if not test_output.endswith('json'):
+        test_output = test_output + '.json'
+    with open(test_output, 'w') as fp:
         json.dump(results, fp)
 
 
