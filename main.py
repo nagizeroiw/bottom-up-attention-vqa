@@ -83,7 +83,10 @@ if __name__ == '__main__':
             raise NotImplemented('dataset not implemented: %s' % args.train_dataset)
 
         if args.test_dataset == 'all':
-            eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
+            if args.train_dataset == 'trainval':
+                eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False)
+            else:
+                eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=False, preloaded=train_dset.val_features())
         elif args.test_dataset == 'filter':
             eval_dset = VQAFeatureDataset('val', dictionary, filter_pair=True)
         elif args.test_dataset == 'pairwise':
