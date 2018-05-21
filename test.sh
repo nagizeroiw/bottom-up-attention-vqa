@@ -1,7 +1,7 @@
-ID=ens_tv_2345
-CUDA_VISIBLE_DEVICES=3 python main.py \
+ID=ens_tv_2222
+CUDA_VISIBLE_DEVICES=0 python main.py \
     --batch_size 256 \
     --model dualatt \
-    --task test-dev \
+    --task test \
     --start_with saved_models/$ID \
     --test_output $ID
