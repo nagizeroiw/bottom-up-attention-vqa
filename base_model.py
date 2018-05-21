@@ -261,7 +261,7 @@ class BaseModelStackAtt(nn.Module):
         super(BaseModelStackAtt, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
-        self.v_att1, self.v_att2, self.v_att3 = v_atts
+        self.v_att = v_atts
         self.q_net = q_net
         self.v_net = v_net
         self.query_net = query_net
@@ -309,15 +309,16 @@ class BaseModelStackAtt(nn.Module):
         w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
 
-        keep1 = self.v_att1.keep_prob(v, q_emb) # keep prob [batch, num_objs]
+        query1 = torch.cat((v.mean(1), q_emb), 1)  # 1st attention query [batch, q_dim+obj_dim]
+        keep1 = self.v_att.keep_prob(v, query1) # keep prob [batch, num_objs]
         att1 = nn.functional.softmax(keep1, dim=1)
         v_emb1 = (att1 * v).sum(1)  # 1st-attended feature vector [batch, obj_dim]
         v_emb = v_emb1
 
         if self.stackatt_nlayers > 1:
 
-            query2 = torch.cat((v_emb1, q_emb), 2) # 2nd-attention query [batch, q_dim + obj_dim]
-            keep2 = self.v_att2.keep_prob(v, query2)
+            query2 = torch.cat((v_emb1, q_emb), 1) # 2nd-attention query [batch, q_dim + obj_dim]
+            keep2 = self.v_att.keep_prob(v, query2)
             att2 = nn.functional.softmax(keep1 * keep2, dim=1)
             v_emb2 = (att2 * v).sum(1)  # 2nd-attended feature vector [batch, obj_dim]
 
@@ -325,8 +326,8 @@ class BaseModelStackAtt(nn.Module):
 
         if self.stackatt_nlayers > 2:
 
-            query3 = torch.cat((v_emb2, q_emb), 2) # 3st-attention query [batch, q_dim + obj_dim]
-            keep3 = self.v_att3.keep_prob(v, query3)
+            query3 = torch.cat((v_emb2, q_emb), 1) # 3st-attention query [batch, q_dim + obj_dim]
+            keep3 = self.v_att.keep_prob(v, query3)
             att3 = nn.functional.softmax(keep1 * keep2 * keep3, dim=1)
             v_emb3 = (att3 * v).sum(1)
 
@@ -428,9 +429,7 @@ def build_dualatt(dataset, num_hid, args):
 def build_stackatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
-    v_att1 = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid, 0.2)
-    v_att2 = NewAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
-    v_att3 = NewAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
+    v_att = NewAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
@@ -438,7 +437,7 @@ def build_stackatt(dataset, num_hid, args):
     classifier = SimpleClassifier(
         num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
 
-    model = BaseModelStackAtt(w_emb, q_emb, (v_att1, v_att2, v_att3), q_net, v_net, query_net, classifier, args)
+    model = BaseModelStackAtt(w_emb, q_emb, v_att, q_net, v_net, query_net, classifier, args)
     return model
 
 

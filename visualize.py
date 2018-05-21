@@ -116,54 +116,58 @@ def process(split):
     annotations = json.load(open(os.path.join(data_root, annotations_file[split])))['annotations']
     pairs = json.load(open(os.path.join(data_root, complementary_pairs_file[split])))
 
-    print('> from spilt %s:' % split)
+    while True:
 
-    pair = random.choice(pairs)
-    q_id_1, q_id_2 = pair
-    '''
-    q_id_1 = int(raw_input('> '))
-    print('> finding pair containing %d...' % q_id_1)
-    for pair in pairs:
-        if q_id_1 in pair:
-            q_id_1, q_id_2 = pair
-            break
-    '''
+        print('> from spilt %s:' % split)
 
-    print('> question id pair: (%d, %d)' % (q_id_1, q_id_2))
+        pair = random.choice(pairs)
+        q_id_1, q_id_2 = pair
+        '''
+        q_id_1 = int(raw_input('> '))
+        print('> finding pair containing %d...' % q_id_1)
+        for pair in pairs:
+            if q_id_1 in pair:
+                q_id_1, q_id_2 = pair
+                break
+        '''
 
-    i_id_1, i_id_2 = None, None
-    q_str_1, q_str_2 = None, None
-    ans_1, ans_2 = None, None
+        print('> question id pair: (%d, %d)' % (q_id_1, q_id_2))
 
-    for q in questions:
-        if q['question_id'] == q_id_1:
-            i_id_1 = q['image_id']
-            q_str_1 = q['question']
-        if q['question_id'] == q_id_2:
-            i_id_2 = q['image_id']
-            q_str_2 = q['question']
+        i_id_1, i_id_2 = None, None
+        q_str_1, q_str_2 = None, None
+        ans_1, ans_2 = None, None
 
-    for a in annotations:
-        if a['question_id'] == q_id_1:
-            assert a['image_id'] == i_id_1
-            ans_1 = a['multiple_choice_answer']
-        if a['question_id'] == q_id_2:
-            assert a['image_id'] == i_id_2
-            ans_2 = a['multiple_choice_answer']
+        for q in questions:
+            if q['question_id'] == q_id_1:
+                i_id_1 = q['image_id']
+                q_str_1 = q['question']
+            if q['question_id'] == q_id_2:
+                i_id_2 = q['image_id']
+                q_str_2 = q['question']
 
-    print('> image id pair: (%d, %d)' % (i_id_1, i_id_2))
+        for a in annotations:
+            if a['question_id'] == q_id_1:
+                assert a['image_id'] == i_id_1
+                ans_1 = a['multiple_choice_answer']
+            if a['question_id'] == q_id_2:
+                assert a['image_id'] == i_id_2
+                ans_2 = a['multiple_choice_answer']
 
-    file_name1 = image_path[split] + '%06d.jpg' % int(i_id_1)
-    print('file name 1:', file_name1)
-    os.system('scp %s ./vis/' % ('jungpu6:~/vqa-butd/data/images/%s' % file_name1))
-    print('> question 1: %s' % q_str_1)
-    print('> answer 1: %s' % ans_1)
+        print('> image id pair: (%d, %d)' % (i_id_1, i_id_2))
 
-    file_name2 = image_path[split] + '%06d.jpg' % int(i_id_2)
-    print('file name 2:', file_name2)
-    os.system('scp %s ./vis/' % ('jungpu6:~/vqa-butd/data/images/%s' % file_name2))
-    print('> question 2: %s' % q_str_2)
-    print('> answer 2: %s' % ans_2)
+        file_name1 = image_path[split] + '%06d.jpg' % int(i_id_1)
+        print('file name 1:', file_name1)
+        os.system('scp %s ./vis/' % ('jungpu6:~/vqa-butd/data/images/%s' % file_name1))
+        print('> question 1: %s' % q_str_1)
+        print('> answer 1: %s' % ans_1)
+
+        file_name2 = image_path[split] + '%06d.jpg' % int(i_id_2)
+        print('file name 2:', file_name2)
+        os.system('scp %s ./vis/' % ('jungpu6:~/vqa-butd/data/images/%s' % file_name2))
+        print('> question 2: %s' % q_str_2)
+        print('> answer 2: %s' % ans_2)
+
+        raw_input()
 
 
 if __name__ == '__main__':
@@ -171,4 +175,4 @@ if __name__ == '__main__':
         split = sys.argv[1]
     except IndexError:
         split = 'valid'
-    check(split)
+    process(split)
