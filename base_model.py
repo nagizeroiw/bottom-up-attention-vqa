@@ -311,13 +311,8 @@ class BaseModelStackAtt(nn.Module):
 
         v_emb0 = v.mean(1)
 
-        print('v_emb0', v_emb0.size())
-        print('q_emb', q_emb.size())
-
         query1 = torch.cat((v_emb0, q_emb), 1)  # 1st attention query [batch, q_dim+obj_dim]
-        print('query1', query1.size())
         keep1 = self.v_att.keep_prob(v, query1)  # keep prob [batch, num_objs]
-        print('keep1', keep1.size())
         att1 = nn.functional.softmax(keep1, dim=1)
         v_emb1 = (att1 * v).sum(1)  # 1st-attended feature vector [batch, obj_dim]
         v_emb = v_emb1
