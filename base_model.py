@@ -429,7 +429,7 @@ def build_dualatt(dataset, num_hid, args):
 def build_stackatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
-    v_att = NewAttention(dataset.v_dim, q_emb.num_hid + num_hid, num_hid, 0.2)
+    v_att = NewAttention(dataset.v_dim, num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
