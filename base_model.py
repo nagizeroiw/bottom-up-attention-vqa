@@ -309,7 +309,9 @@ class BaseModelStackAtt(nn.Module):
         w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
 
-        query1 = torch.cat((v.mean(1), q_emb), 1)  # 1st attention query [batch, q_dim+obj_dim]
+        v_emb0 = self.query_net(v.mean(1))
+
+        query1 = torch.cat((v_emb0, q_emb), 1)  # 1st attention query [batch, q_dim+obj_dim]
         print('query1', query1.size())
         keep1 = self.v_att.keep_prob(v, query1) # keep prob [batch, num_objs]
         print('keep1', keep1.size())
@@ -431,7 +433,7 @@ def build_dualatt(dataset, num_hid, args):
 def build_stackatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
-    v_att = NewAttention(dataset.v_dim, num_hid, num_hid, 0.2)
+    v_att = NewAttention(dataset.v_dim, num_hid + q_emb.num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
