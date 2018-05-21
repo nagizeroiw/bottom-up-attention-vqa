@@ -6,7 +6,7 @@ CUDA_VISIBLE_DEVICES=0 python main.py \
     --pair_loss_weight 0 \
     --pair_loss_type @att \
     --gamma 2.5 \
-    --model dualatt \
-    --train_dataset trainval \
+    --model stackatt \
+    --train_dataset all \
     --test_dataset all \
-    --seed 5555
+    --seed 2345
