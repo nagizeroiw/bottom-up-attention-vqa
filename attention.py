@@ -59,7 +59,7 @@ class NewAttention(nn.Module):
         v_proj = self.v_proj(v) # [batch, k, qdim]
         v_proj = self.dropout(v_proj)
         q_proj = self.q_proj(q).unsqueeze(1).repeat(1, k, 1)
-        q_proj = self.q_proj(q_proj)
+        q_proj = self.dropout(q_proj)
 
         joint_repr = v_proj * q_proj  # was cat[v, q]
         joint_repr = self.dropout(joint_repr)
