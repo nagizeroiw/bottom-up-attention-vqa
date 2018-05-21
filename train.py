@@ -98,10 +98,16 @@ def seek(model, test_set, args, split, question_id):
     qid = Variable(qid).cuda()
 
     pred, att = model.module.seek(v, b, q, qid)
-    logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
-    print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+    _, indices = torch.max(pred, 1)  # argmax: probs & indices
+    indices = indices.data  # argmax -> size (batch,)
+    probs = torch.exp(pred - torch.max(pred))
+    probs = probs / probs.sum(1)
+    print(probs.size())
+    probs = probs.squeeze().data
 
-    iid = int(qid[0]) / 1000
+    print(int(qid[0]), int(indices[0]), label2ans[int(indices[0])], probs[int(indices[0])])
+
+    iid = int(qid[0]) / 1000  # question id -> image id
     image_file_name = image_path[split] + '%06d.jpg' % iid
     print('image file name: %s' % image_file_name)
     # something like (375, 500, 3)
@@ -132,7 +138,7 @@ def seek(model, test_set, args, split, question_id):
         # Add the patch to the Axes
         ax.add_patch(rect)
 
-    plt.xlabel('%s -> %s' % (args.start_with.split('/')[1], label2ans[int(logits[0])]))
+    plt.xlabel('%s -> %s (%.3f)' % (args.start_with.split('/')[1], label2ans[int(indices[0])], probs[int(indices[0])]))
 
     print('> saving image to %s...' % args.seek_output)
     plt.savefig(args.seek_output)
