@@ -309,11 +309,14 @@ class BaseModelStackAtt(nn.Module):
         w_emb = self.w_emb(q)  # preprocess question [batch, seq_length, wemb_dim]
         q_emb = self.q_emb(w_emb)  # question representation [batch, q_dim]
 
-        v_emb0 = self.query_net(v.mean(1))
+        v_emb0 = v.mean(1)
+
+        print('v_emb0', v_emb0.size())
+        print('q_emb', q_emb.size())
 
         query1 = torch.cat((v_emb0, q_emb), 1)  # 1st attention query [batch, q_dim+obj_dim]
         print('query1', query1.size())
-        keep1 = self.v_att.keep_prob(v, query1) # keep prob [batch, num_objs]
+        keep1 = self.v_att.keep_prob(v, query1)  # keep prob [batch, num_objs]
         print('keep1', keep1.size())
         att1 = nn.functional.softmax(keep1, dim=1)
         v_emb1 = (att1 * v).sum(1)  # 1st-attended feature vector [batch, obj_dim]
@@ -321,7 +324,7 @@ class BaseModelStackAtt(nn.Module):
 
         if self.stackatt_nlayers > 1:
 
-            query2 = torch.cat((v_emb1, q_emb), 1) # 2nd-attention query [batch, q_dim + obj_dim]
+            query2 = torch.cat((v_emb1, q_emb), 1)  # 2nd-attention query [batch, q_dim + obj_dim]
             keep2 = self.v_att.keep_prob(v, query2)
             att2 = nn.functional.softmax(keep1 * keep2, dim=1)
             v_emb2 = (att2 * v).sum(1)  # 2nd-attended feature vector [batch, obj_dim]
@@ -330,7 +333,7 @@ class BaseModelStackAtt(nn.Module):
 
         if self.stackatt_nlayers > 2:
 
-            query3 = torch.cat((v_emb2, q_emb), 1) # 3st-attention query [batch, q_dim + obj_dim]
+            query3 = torch.cat((v_emb2, q_emb), 1)  # 3st-attention query [batch, q_dim + obj_dim]
             keep3 = self.v_att.keep_prob(v, query3)
             att3 = nn.functional.softmax(keep1 * keep2 * keep3, dim=1)
             v_emb3 = (att3 * v).sum(1)
@@ -433,7 +436,7 @@ def build_dualatt(dataset, num_hid, args):
 def build_stackatt(dataset, num_hid, args):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.4)
     q_emb = QuestionEmbedding(300, num_hid, args.rnn_layer, False, 0.4)
-    v_att = NewAttention(dataset.v_dim, num_hid + q_emb.num_hid, num_hid, 0.2)
+    v_att = NewAttention(dataset.v_dim, 2048 + q_emb.num_hid, num_hid, 0.2)
     q_net = FCNet([q_emb.num_hid, num_hid])
     v_net = FCNet([dataset.v_dim, num_hid])
     query_net = FCNet([dataset.v_dim, num_hid])
