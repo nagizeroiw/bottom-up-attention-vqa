@@ -169,6 +169,6 @@ def process(split):
 if __name__ == '__main__':
     try:
         split = sys.argv[1]
-    except KeyError:
+    except IndexError:
         split = 'valid'
-    count(split)
+    check(split)
