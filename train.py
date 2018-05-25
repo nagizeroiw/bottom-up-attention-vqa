@@ -84,6 +84,8 @@ def seek(model, test_set, args, split, question_id):
     # load from start_with
     assert args.start_with is not None
     print('> loading saved model from %s...' % os.path.join(args.start_with, 'model.pth'))
+    model_name = args.start_with.split('/')[1]
+    print('> model name : %s' % model_name)
     model.load_state_dict(torch.load(os.path.join(args.start_with, 'model.pth')))
     model.train(False)
     print('> model loaded')
@@ -105,43 +107,49 @@ def seek(model, test_set, args, split, question_id):
     print(probs.size())
     probs = probs.squeeze()
 
-    print(int(qid[0]), int(indices[0]), label2ans[int(indices[0])], probs[int(indices[0])].item())
+    batch = indices.size()[0]
+    print('batch size %d' % batch)
 
-    iid = int(qid[0]) / 1000  # question id -> image id
-    image_file_name = image_path[split] + '%06d.jpg' % iid
-    print('image file name: %s' % image_file_name)
-    # something like (375, 500, 3)
+    for kk in xrange(batch):
 
-    with open(os.path.join(image_root, image_file_name)) as image_fp:
-        image = plt.imread(image_fp)
+        print('%d / %d' % (kk, batch), int(qid[kk]), int(indices[kk]), label2ans[int(indices[kk])], probs[int(indices[kk])].item())
 
-    print('image shape', image.shape)
-    h, w, _ = image.shape
+        iid = int(qid[kk]) / 1000  # question id -> image id
+        image_file_name = image_path[split] + '%06d.jpg' % iid
+        print('image file name: %s' % image_file_name)
+        # something like (375, 500, 3)
 
-    fig, ax = plt.subplots()
-    ax.imshow(image)
+        with open(os.path.join(image_root, image_file_name)) as image_fp:
+            image = plt.imread(image_fp)
 
-    for k in xrange(36):
+        print('image shape', image.shape)
+        h, w, _ = image.shape
 
-        weight = att[0, k].data[0]
+        fig, ax = plt.subplots()
+        ax.imshow(image)
 
-        x1, y1, x2, y2, dx, dy = b[0, k].data
+        for k in xrange(36):
 
-        x1, dx = x1 * w, dx * w
-        y1, dy = y1 * h, dy * h
+            weight = att[kk, k].data[0]
 
-        rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=min(1, weight))
-        
-        if weight >= 0.1:
-            plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
+            x1, y1, x2, y2, dx, dy = b[kk, k].data
 
-        # Add the patch to the Axes
-        ax.add_patch(rect)
+            x1, dx = x1 * w, dx * w
+            y1, dy = y1 * h, dy * h
 
-    plt.xlabel('%s -> %s (%.3f)' % (args.start_with.split('/')[1], label2ans[int(indices[0])], probs[int(indices[0])]))
+            rect = patches.Rectangle((x1, y1), dx, dy, edgecolor='black', facecolor='red', alpha=min(1, weight))
+            
+            if weight >= 0.1:
+                plt.text(x1, y1, '%.2f' % weight, verticalalignment='top', horizontalalignment='left', color='black')
 
-    print('> saving image to %s...' % args.seek_output)
-    plt.savefig(args.seek_output)
+            # Add the patch to the Axes
+            ax.add_patch(rect)
+
+        plt.xlabel('%s -> %s (%.3f)' % (args.start_with.split('/')[1], label2ans[int(indices[kk])], probs[int(indices[kk])]))
+
+        fig_output = os.path.join(args.seek_output, '%s_%d.jpg' % (model_name, int(qid[kk])))
+        print('> saving image to %s...' % fig_output)
+        plt.savefig(fig_output)
 
 
 def measure(model, test_loader, args):

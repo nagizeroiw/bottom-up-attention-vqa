@@ -146,7 +146,7 @@ if __name__ == '__main__':
         torch.backends.cudnn.benchmark = True
 
         start = time.time()
-        batch_size = 1
+        batch_size = 100
 
         dictionary = Dictionary.load_from_file('data/dictionary.pkl')
         test_dset = VQAFeatureDataset(split, dictionary, filter_pair=False, is_test=True)
