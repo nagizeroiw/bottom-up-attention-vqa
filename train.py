@@ -71,7 +71,7 @@ def compute_score_with_logits(logits, labels):
     return scores
 
 
-def seek(model, test_set, args, split, question_id):
+def seek(model, test_loader, args, split, question_id):
 
     image_path = {
         'train': 'train2014/COCO_train2014_000000',
@@ -93,7 +93,7 @@ def seek(model, test_set, args, split, question_id):
     label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
     label2ans = cPickle.load(open(label2ans_file, 'rb'))
 
-    v, b, q, qid = test_set.get_qid_minibatch(question_id)
+    v, b, q, qid = next(iter(test_loader))
     v = Variable(v).cuda()
     b = Variable(b).cuda()
     q = Variable(q).cuda()

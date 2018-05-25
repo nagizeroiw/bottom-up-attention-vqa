@@ -158,4 +158,6 @@ if __name__ == '__main__':
         model.w_emb.init_embedding('data/glove6b_init_300d.npy')
         model = nn.DataParallel(model).cuda()
 
-        seek(model, test_dset, args, split, question_id)
+        test_loader = DataLoader(test_dset, batch_size, shuffle=False, num_workers=1)
+
+        seek(model, test_loader, args, split, question_id)
