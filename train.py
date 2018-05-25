@@ -152,7 +152,7 @@ def seek(model, test_loader, args, split, question_id):
 
         plt.xlabel('%s -> %s (%.3f)' % (args.start_with.split('/')[1], label2ans[int(indices[kk])], prob[int(indices[kk])]))
 
-        fig_output = os.path.join(args.seek_output, '%d_%s.jpg' % (int(qid[kk], model_name)))
+        fig_output = os.path.join(args.seek_output, '%d_%s.jpg' % (int(qid[kk]), model_name))
         print('> saving image to %s...' % fig_output)
         plt.savefig(fig_output)
 
