@@ -110,7 +110,7 @@ def seek(model, test_loader, args, split, question_id):
 
     for kk in xrange(batch):
 
-        pred = preds[int(indices[kk])]
+        pred = preds[kk]
         print('pred', pred.size())
         prob = torch.exp(pred - torch.max(pred))
         prob = prob / prob.sum(1)
