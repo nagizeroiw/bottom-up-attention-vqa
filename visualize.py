@@ -175,4 +175,4 @@ if __name__ == '__main__':
         split = sys.argv[1]
     except IndexError:
         split = 'valid'
-    process(split)
+    check(split)
