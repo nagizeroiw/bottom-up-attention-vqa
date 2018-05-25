@@ -113,7 +113,8 @@ def seek(model, test_loader, args, split, question_id):
         pred = preds[kk]
         print('pred', pred.size())
         prob = torch.exp(pred - torch.max(pred))
-        prob = prob / prob.sum(1)
+        print('prob', prob.size())
+        prob = prob / prob.sum()
         print('prob', prob.size())
 
         print('%d / %d' % (kk, batch), int(qid[kk]), int(indices[kk]), label2ans[int(indices[kk])], prob[int(indices[kk])].item())
