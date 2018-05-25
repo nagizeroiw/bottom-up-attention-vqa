@@ -93,7 +93,11 @@ def seek(model, test_loader, args, split, question_id):
     label2ans_file = os.path.join('data/cache', 'trainval_label2ans.pkl')
     label2ans = cPickle.load(open(label2ans_file, 'rb'))
 
-    v, b, q, qid = test_loader[5]
+    # dirty code
+    for i, (v, b, q, qid) in enumerate(test_loader):
+        if i == 2:
+            break
+
     v = Variable(v).cuda()
     b = Variable(b).cuda()
     q = Variable(q).cuda()
