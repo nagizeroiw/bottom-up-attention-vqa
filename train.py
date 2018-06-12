@@ -195,11 +195,13 @@ def measure(model, test_loader, args):
             pred_ = pred[k]
             prob = torch.exp(pred_ - torch.max(pred_))
             prob = prob / prob.sum()
-            
-            if k == 0 and i % disp_freq == 0:
-                print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])], prob)
 
-            all_results[int(qid[k])] = (label2ans[int(logits[k])], prob)
+            conf = prob.data[logits[k]].item()
+
+            if k == 0 and i % disp_freq == 0:
+                print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])], conf)
+
+            all_results[int(qid[k])] = (label2ans[int(logits[k])], conf)
 
     results = []
     for qid, ans in all_results.iteritems():
