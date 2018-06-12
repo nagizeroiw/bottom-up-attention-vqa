@@ -185,10 +185,10 @@ def measure(model, test_loader, args):
         pred, _, __ = model(v, b, q, qid)
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
         confs = torch.max(pred, 1)[0].data
-        print('confs.shape', confs.shape)
+        # print('confs.shape', confs.shape)
 
         if i % disp_freq == 0:
-            print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
+            print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])], confs[0])
 
         for k in range(logits.size()[0]):
             # print(int(qid[k]), int(logits[k]), label2ans[int(logits[k])])
