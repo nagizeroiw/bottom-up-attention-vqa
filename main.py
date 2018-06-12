@@ -123,7 +123,7 @@ if __name__ == '__main__':
         batch_size = args.batch_size
 
         dictionary = Dictionary.load_from_file('data/dictionary.pkl')
-        test_dset = VQAFeatureDataset(args.task, dictionary, filter_pair=False, is_test=True)
+        test_dset = VQAFeatureDataset('val', dictionary, filter_pair=False, is_test=True)
             
         print '> data loaded. time: %.2fs' % (time.time() - start)
 
