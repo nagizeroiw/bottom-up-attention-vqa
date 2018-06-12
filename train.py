@@ -184,6 +184,8 @@ def measure(model, test_loader, args):
 
         pred, _, __ = model(v, b, q, qid)
         logits = torch.max(pred, 1)[1].data  # argmax -> size (batch,)
+        confs = torch.max(pred, 1)[0].data
+        print('confs.shape', confs.shape)
 
         if i % disp_freq == 0:
             print(int(qid[0]), int(logits[0]), label2ans[int(logits[0])])
@@ -191,13 +193,14 @@ def measure(model, test_loader, args):
         for k in range(logits.size()[0]):
             # print(int(qid[k]), int(logits[k]), label2ans[int(logits[k])])
             assert int(qid[k]) not in all_results
-            all_results[int(qid[k])] = label2ans[int(logits[k])]
+            all_results[int(qid[k])] = (label2ans[int(logits[k])], confs[k])
 
     results = []
     for qid, ans in all_results.iteritems():
         results.append({
             'question_id': qid,
-            'answer': ans
+            'answer': ans[0],
+            'confidence': ans[1]
             })
     test_output = args.test_output
     if not test_output.endswith('json'):
